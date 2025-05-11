@@ -17,10 +17,7 @@ import { InfoIcon } from 'lucide-react';
 import { ExclamationCircleFilled } from '@ant-design/icons';
 import { toast } from "sonner"
 import { useNavigate } from 'react-router-dom';
-
-
-
-import { Modal, Space } from 'antd';
+import { Modal } from 'antd';
 
 const { confirm } = Modal;
 
@@ -64,20 +61,20 @@ export function SolicitudReserva(): React.JSX.Element {
         confirm({
             title: '¿Estas seguro?',
             icon: <ExclamationCircleFilled />,
+            okText: 'Continuar',
+            cancelText: 'Cancelar',
             content:
                 <div>
                     ¿Estás seguro de que deseas enviar la solicitud de reserva?
                     <br />
                     Verifica que la información sea correcta antes de continuar.
-                    <Separator className="my-4" />
-                    <p className="text-sm text-muted-foreground">Datos</p>
-                    <p className="text-sm text-muted-foreground">Espacio: {espacios?.find(e => e.nEspacio === nEspacioSeleccionado)?.cEspacio}</p>
-                    <p className="text-sm text-muted-foreground">Fecha y hora: {fieldInicio.value?.toLocaleString()} - {fieldFin.value?.toLocaleString()}</p>
-                    <p className="text-sm text-muted-foreground">Solicitante: {form.getValues('cNombreSolicitante')}</p>
-                    <p className="text-sm text-muted-foreground">Departamento: {form.getValues('cDepartamento')}</p>
-                    <p className="text-sm text-muted-foreground">Duración: {form.getValues('cDuracionEstimada')}</p>
-                    <p className="text-sm text-muted-foreground">Descripción: {form.getValues('cDescripcion')}</p>
-                    <p className="text-sm text-muted-foreground">Recuerda que la solicitud está sujeta a aprobación por parte del administrador.</p>
+                    <p className="text-sm text-muted-foreground"><strong>Espacio: </strong>{espacios?.find(e => e.nEspacio === nEspacioSeleccionado)?.cEspacio}</p>
+                    <p className="text-sm text-muted-foreground"><strong>Fecha y hora:</strong> {fieldInicio.value?.toLocaleString()} - {fieldFin.value?.toLocaleString()}</p>
+                    <p className="text-sm text-muted-foreground"><strong>Solicitante:</strong> {form.getValues('cNombreSolicitante')}</p>
+                    <p className="text-sm text-muted-foreground"><strong>Departamento:</strong> {form.getValues('cDepartamento')}</p>
+                    <p className="text-sm text-muted-foreground"><strong>Duración: </strong>{form.getValues('cDuracionEstimada')}</p>
+                    <p className="text-sm text-muted-foreground"><strong>Descripción: </strong>{form.getValues('cDescripcion')}</p>
+                    <p className="text-sm text-muted-foreground"><strong>Recuerda que la solicitud está sujeta a aprobación por parte del administrador.</strong></p>
                 </div>,
             onOk() {
                 return new Promise(async (resolve, reject) => {
@@ -87,11 +84,14 @@ export function SolicitudReserva(): React.JSX.Element {
                             description: `La solicitud de reserva ha sido enviada. Tu numero de folio es: ${request.data.data.nFolio}`,
                             duration: 5000,
                             position: 'top-right',
+                            descriptionClassName: 'text-sm text-black',
                         })
 
                         setTimeout(() => {
-                            navigate('/reservas')
-                        }, 2000)
+                            navigate('/reservas', { replace: true });
+                        }, 2000);
+
+                        resolve(true);
 
 
                     } catch (error) {
@@ -101,6 +101,7 @@ export function SolicitudReserva(): React.JSX.Element {
                             duration: 5000,
                             position: 'top-right',
                         })
+                        reject(false);
 
                     }
 

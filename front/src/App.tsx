@@ -1,5 +1,5 @@
 import React from "react";
-import { Routes, Route, Outlet, Link } from "react-router-dom";
+import { Routes, Route, Outlet } from "react-router-dom";
 import { roles, findBreadcrumbs } from './lib/utils'
 
 //Components
@@ -37,8 +37,8 @@ const data = [
         url: "/reservas/solicitud",
       },
       {
-        title: "Consulta de Reservas",
-        url: "/reservas",
+        title: "Consultar mis Reservas",
+        url: "/reservas/consultar",
       },
     ],
   }
@@ -81,6 +81,7 @@ export default function App() {
           <Route path="/" element={<Layout />}>
             <Route index={true} element={<LandingPage />} />
             <Route path="reservas" element={<LandingPage />} />
+            <Route path="reservas/consultar" element={<LandingPage />} />
             <Route path="reservas/solicitud" element={<SolicitudReserva />} />
             <Route path="abc/:id" element={<></>} />
 
@@ -190,10 +191,7 @@ function NoMatch() {
 
   return (
     <div>
-      <h2>Nothing to see here! WIP</h2>
-      <p>
-        <Link to="/">Go to the < h1 className={"text-blue-600 underline"}> home page</h1></Link>
-      </p>
+      <Toaster />
     </div>
   );
 }
