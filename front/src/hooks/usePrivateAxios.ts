@@ -1,6 +1,7 @@
 import { createAxiosInstance } from "../lib/api";
-import { useEffect } from "react";
+//import { useEffect } from "react";
 import { useRefreshToken } from "./useRefreshToken";
+import axios from "axios";
 import { useAuth } from "./useAuth";
 import { useNavigate } from "react-router-dom";
 
@@ -10,43 +11,38 @@ const useAxios = () => {
   const apiInstance = createAxiosInstance();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const requestInterceptor = apiInstance.interceptors.request.use(
-      (config) => {
-        if (!config.headers["Authorization"] && auth?.accessToken) {
-          config.headers["Authorization"] = `Bearer ${auth?.accessToken}`;
-        }
-        return config;
-      },
-      (error) => Promise.reject(error)
-    );
+  //
 
-    const responseInterceptor = apiInstance.interceptors.response.use(
-      (response) => response,
-      async (error) => {
-        if (error?.response?.status === 401 && !error.config._retry) {
-          error.config._retry = true;
-          try {
-            const newAccessToken = await refreshToken();
-            if (!newAccessToken) return Promise.reject(error);
+  apiInstance.interceptors.request.use(
+    (config) => {
+      if (!config.headers["Authorization"] && auth?.accessToken) {
+        config.headers["Authorization"] = `Bearer ${auth?.accessToken}`;
+      }
+      return config;
+    },
+    (error) => Promise.reject(error)
+  );
 
-            error.config.headers["Authorization"] = `Bearer ${newAccessToken}`;
+  apiInstance.interceptors.response.use(
+    (response) => response,
+    async (error) => {
+      if (error?.response?.status === 401 && !error.config._retry) {
+        error.config._retry = true;
+        try {
+          const newAccessToken = await refreshToken();
+          if (!newAccessToken) return Promise.reject(error);
 
-            return apiInstance.request(error.config);
-          } catch (refreshError) {
+          error.config.headers["Authorization"] = `Bearer ${newAccessToken}`;
 
-            navigate("/");
-            return Promise.reject(refreshError);
-          }
+          return axios.request(error.config);
+        } catch (refreshError) {
+          console.error("Error refreshing token:", refreshError);
+          navigate("/");
+          return Promise.reject(refreshError);
         }
       }
-    );
-
-    return () => {
-      apiInstance.interceptors.request.eject(requestInterceptor);
-      apiInstance.interceptors.response.eject(responseInterceptor);
-    };
-  }, [auth, refreshToken]);
+    }
+  );
 
   return apiInstance;
 };

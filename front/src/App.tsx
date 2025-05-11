@@ -17,6 +17,7 @@ import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useRefreshToken } from '@/hooks/useRefreshToken';
+import { useAxios } from "./hooks/usePrivateAxios";
 
 //Pages
 import { Login } from "@/pages/Login";
@@ -47,6 +48,8 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(true);
   const { refreshToken } = useRefreshToken();
   const { auth } = useAuth();
+  useAxios();
+
 
   useEffect(() => {
     let isMounted = true;

@@ -10,7 +10,6 @@ const obtenerReservasAprovadasByEspacio = async (req: Request, res: Response) =>
 
 const registrarReserva = async (req: Request, res: Response) => {
     const usuario = req.usuario;
-    console.log(usuario);
     const reserva = await reservasService.crearReserva({ ...req.body, nUsuario: usuario?.nUsuario });
     new SuccessResponse("Éxito", reserva).send(res)
 }

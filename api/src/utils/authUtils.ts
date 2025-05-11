@@ -9,7 +9,7 @@ interface Tokens {
 }
 
 export const getAccessToken = (authorization?: string) => {
-	if (!authorization) throw new AuthFailureError('Invalid authentication');
+	if (!authorization) throw new AuthFailureError('Invalid Authorization, no token provided');
 	if (!authorization.startsWith('Bearer ')) throw new AuthFailureError('Invalid Authorization');
 	return authorization.split(' ')[1];
 };
@@ -19,12 +19,12 @@ export const validateTokenData = (payload: JwtPayload): boolean => {
 	return true;
 };
 
-export const createTokens = async (user: IUsuario, accessTokenKey: string, refreshTokenKey: string): Promise<Tokens> => {
-	const accessToken = await JWT.encode(new JwtPayload(/* issuer */ jwt.issuer, /* audience */ jwt.audience, /* subject */ user.nUsuario, /* param */ accessTokenKey, /* validity */));
+export const createTokens = async (usuario: IUsuario, accessTokenKey: string, refreshTokenKey: string): Promise<Tokens> => {
+	const accessToken = await JWT.encode(new JwtPayload(/* issuer */ jwt.issuer, /* audience */ jwt.audience, /* subject */ usuario.nUsuario, /* param */ accessTokenKey, /* validity */));
 
 	if (!accessToken) throw new InternalError();
 
-	const refreshToken = await JWT.encode(new JwtPayload(/* issuer */ jwt.issuer, /* audience */ jwt.audience, /* subject */ user.nUsuario, /* param */ refreshTokenKey, /* validity */));
+	const refreshToken = await JWT.encode(new JwtPayload(/* issuer */ jwt.issuer, /* audience */ jwt.audience, /* subject */ usuario.nUsuario, /* param */ refreshTokenKey, /* validity */));
 
 	if (!refreshToken) throw new InternalError();
 
@@ -34,6 +34,6 @@ export const createTokens = async (user: IUsuario, accessTokenKey: string, refre
 	} as Tokens;
 };
 
-export const createAccessToken = async (user: IUsuario, accessTokenKey: string): Promise<string> => {
-	return await JWT.encode(new JwtPayload(jwt.issuer, jwt.audience, user.nUsuario, accessTokenKey));
+export const createAccessToken = async (usuario: IUsuario, accessTokenKey: string): Promise<string> => {
+	return await JWT.encode(new JwtPayload(jwt.issuer, jwt.audience, usuario.nUsuario, accessTokenKey));
 };

@@ -22,7 +22,7 @@ export function useEspacios() {
 
         fetchEspacios();
 
-        // Cleanup function to avoid memory leaks
+        // Cleanup
         return () => {
             setEspacios([]);
             setCargando(false);

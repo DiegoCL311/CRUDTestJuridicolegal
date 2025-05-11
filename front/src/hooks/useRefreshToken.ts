@@ -11,6 +11,7 @@ const useRefreshToken = () => {
         withCredentials: true,
       });
 
+
       if (response.status === 200 && response.data?.data?.accessToken) {
         setAuth({
           usuario: response.data.data.usuario,

@@ -20,7 +20,7 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({ disabledRanges =
 
     // Calcula rangos dinámicos incluyendo bloqueo hacia atrás y hacia adelante
     const dynamicRanges = useMemo(() => {
-        const [startSel] = selectedDates;
+        const [startSel] = selectedDates || [null, null];
         if (startSel) {
             const anteriores = disabledRanges.filter(r => r.end.isBefore(startSel));
             const posteriores = disabledRanges.filter(r => r.start.isAfter(startSel));

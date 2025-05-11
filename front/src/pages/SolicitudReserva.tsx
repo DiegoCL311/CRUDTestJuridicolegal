@@ -1,6 +1,6 @@
 // SolicitudReserva.tsx
-import React from 'react';
-import { useForm, useController } from 'react-hook-form';
+import React, { useEffect, useState } from 'react';
+import { useForm, useController, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Form, FormField, FormItem, FormControl, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
@@ -14,6 +14,15 @@ import { useEspacios } from '@/hooks/espacios';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useAxios } from '@/hooks/usePrivateAxios';
 import { InfoIcon } from 'lucide-react';
+import { ExclamationCircleFilled } from '@ant-design/icons';
+import { toast } from "sonner"
+import { useNavigate } from 'react-router-dom';
+
+
+
+import { Modal, Space } from 'antd';
+
+const { confirm } = Modal;
 
 import { z } from '@/lib/es-zod'
 import dayjs, { Dayjs } from 'dayjs';
@@ -33,26 +42,94 @@ type FormData = z.infer<typeof schema>;
 
 type DisabledRange = { start: Dayjs; end: Dayjs };
 
-const disabledRanges: DisabledRange[] = [{
-    start: dayjs('2025-05-10 13:00', 'YYYY-MM-DD HH:mm'), end: dayjs('2025-05-12 15:00', 'YYYY-MM-DD HH:mm')
-}, { start: dayjs('2025-05-15 08:00', 'YYYY-MM-DD HH:mm'), end: dayjs('2025-05-15 12:00', 'YYYY-MM-DD HH:mm') }];
-
 export function SolicitudReserva(): React.JSX.Element {
     const form = useForm<FormData>({ resolver: zodResolver(schema) });
-    const api = useAxios();
     const { espacios } = useEspacios();
     const { field: fieldInicio } = useController({ name: 'dFechaInicio', control: form.control });
     const { field: fieldFin } = useController({ name: 'dFechaFin', control: form.control });
     const { errors } = form.formState;
+    const api = useAxios();
+    const nEspacioSeleccionado = useWatch({ control: form.control, name: 'nEspacio' });
+    const [disabledDates, setDisabledDates] = useState<DisabledRange[]>([]);
+    const navigate = useNavigate();
+    const [disabledbutton, setDisabledbutton] = useState(false);
+
+
+
 
     // Manejador de envío válido
     async function onSubmit(data: FormData) {
         console.log('Envío correcto:', data);
-        const request = await api.post('/reservas/registrar', data)
+        setDisabledbutton(true);
+        confirm({
+            title: '¿Estas seguro?',
+            icon: <ExclamationCircleFilled />,
+            content:
+                <div>
+                    ¿Estás seguro de que deseas enviar la solicitud de reserva?
+                    <br />
+                    Verifica que la información sea correcta antes de continuar.
+                    <Separator className="my-4" />
+                    <p className="text-sm text-muted-foreground">Datos</p>
+                    <p className="text-sm text-muted-foreground">Espacio: {espacios?.find(e => e.nEspacio === nEspacioSeleccionado)?.cEspacio}</p>
+                    <p className="text-sm text-muted-foreground">Fecha y hora: {fieldInicio.value?.toLocaleString()} - {fieldFin.value?.toLocaleString()}</p>
+                    <p className="text-sm text-muted-foreground">Solicitante: {form.getValues('cNombreSolicitante')}</p>
+                    <p className="text-sm text-muted-foreground">Departamento: {form.getValues('cDepartamento')}</p>
+                    <p className="text-sm text-muted-foreground">Duración: {form.getValues('cDuracionEstimada')}</p>
+                    <p className="text-sm text-muted-foreground">Descripción: {form.getValues('cDescripcion')}</p>
+                    <p className="text-sm text-muted-foreground">Recuerda que la solicitud está sujeta a aprobación por parte del administrador.</p>
+                </div>,
+            onOk() {
+                return new Promise(async (resolve, reject) => {
+                    try {
+                        const request = await api.post('/reservas/registrar', data)
+                        toast.success('Solicitud enviada correctamente', {
+                            description: `La solicitud de reserva ha sido enviada. Tu numero de folio es: ${request.data.data.nFolio}`,
+                            duration: 5000,
+                            position: 'top-right',
+                        })
 
-        console.log(request.data);
+                        setTimeout(() => {
+                            navigate('/reservas')
+                        }, 2000)
+
+
+                    } catch (error) {
+                        console.error('Error al enviar la solicitud:', error);
+                        toast.error('Error al enviar la solicitud', {
+                            description: 'Hubo un error al enviar la solicitud de reserva. Por favor, inténtalo de nuevo más tarde.',
+                            duration: 5000,
+                            position: 'top-right',
+                        })
+
+                    }
+
+                    setTimeout(Math.random() > 0.5 ? resolve : reject, 1000);
+                }).catch(() => console.log('Oops errors!'));
+            },
+            onCancel() {
+                setDisabledbutton(false);
+            },
+        });
 
     }
+
+
+
+    useEffect(() => {
+        if (!nEspacioSeleccionado) return;
+
+        api.get(`/reservas/obtenerReservasAprovadasByespacio/${nEspacioSeleccionado}`)
+            .then(res => {
+                const fechas: DisabledRange[] = res.data.data.map((item: { dFechaInicio: string; dFechaFin: string }) => ({
+                    start: dayjs(item.dFechaInicio, 'YYYY-MM-DD HH:mm'),
+                    end: dayjs(item.dFechaFin, 'YYYY-MM-DD HH:mm')
+                }));
+                //console.log('Fechas a deshabilitar:', fechas);
+                setDisabledDates(fechas);
+            })
+            .catch(err => console.error('Error al obtener fechas del espacio:', err));
+    }, [nEspacioSeleccionado]);
 
     return (
         <div className="flex flex-1 flex-col gap-4 p-4">
@@ -102,15 +179,19 @@ export function SolicitudReserva(): React.JSX.Element {
                         </Tooltip>
                     )}</h2>
                     <div className="text-center">
-                        <DateTimePicker
-                            disabledRanges={disabledRanges}
-                            onCalendarChange={(dates: (Dayjs | null)[]) => {
-                                // Convertir Dayjs a Date para Zod
-                                const [dFechaInicio, dFechaFin] = dates;
-                                fieldInicio.onChange(dFechaInicio?.toDate());
-                                fieldFin.onChange(dFechaFin?.toDate());
-                            }}
-                        />
+                        {!nEspacioSeleccionado ? (
+                            <p className="text-sm text-muted-foreground">Seleccione un espacio para habilitar el calendario</p>
+                        ) : (
+                            <DateTimePicker
+                                disabledRanges={disabledDates}
+                                onCalendarChange={(dates: (Dayjs | null)[]) => {
+                                    // Convertir Dayjs a Date para Zod
+                                    const [dFechaInicio, dFechaFin] = dates || [null, null];
+                                    fieldInicio.onChange(dFechaInicio?.toDate());
+                                    fieldFin.onChange(dFechaFin?.toDate());
+                                }}
+                            />
+                        )}
                     </div>
 
                     {/* Detalles de la reserva */}
@@ -155,10 +236,10 @@ export function SolicitudReserva(): React.JSX.Element {
                         </FormItem>
                     )} />
 
-                    {/* Botón de envío */}
-                    <Button type="submit" className="float-right">Solicitar</Button>
+                    <Button type="submit" disabled={disabledbutton} className='float-right'>Solicitar</Button>
                 </form>
             </Form>
+
         </div >
     );
 }

@@ -6,12 +6,12 @@ import { NoEntryError } from '../core/ApiError';
  * @param {number} nEspacio – ID del espacio a buscar.
  * @returns {IReserva | null} – Rol completo (incluye  timestamps).
  */
-export const obtenerReservasAprovadasByEspacio = async (nEspacio: number): Promise<IReserva[] | null> => {
+export const obtenerReservasAprovadasByEspacio = async (nEspacio: number): Promise<{ dFechaInicio: string, dFechaFin: string }[] | null> => {
     const reservas = await ReservaModel.findAll({
         where: { nEspacio, nEstatus: 3, bActivo: true },
     });
 
-    return reservas;
+    return reservas.flatMap((reserva) => { return { dFechaInicio: reserva.dFechaInicio, dFechaFin: reserva.dFechaFin } });
 };
 
 /**
