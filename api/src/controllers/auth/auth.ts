@@ -45,7 +45,7 @@ const login = async (req: Request, res: Response) => {
         throw new AuthFailureError("Credenciales inválidas");
 
     //verificar si el usuario esta activo
-    if (usuario.nEstatus !== 1)
+    if (usuario.bActivo !== 1)
         throw new AuthFailureError("Usuario inactivo");
 
     if (!await bcrypt.compare(cPassword, usuario.cPassword))
@@ -62,7 +62,7 @@ const login = async (req: Request, res: Response) => {
         nUsuario: usuario.nUsuario,
         accessKey: accessKey,
         refreshKey: refreshKey,
-        nEstatus: 1,
+        bActivo: 1,
     });
 
     const usuarioPublico = {

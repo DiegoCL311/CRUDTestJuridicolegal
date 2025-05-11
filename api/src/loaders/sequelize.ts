@@ -3,6 +3,9 @@ import { db } from "../config/index";
 import User, { loadModel as loadUsuarioModel } from "../models/usuario";
 import Rol, { loadModel as loadRolModel } from "../models/roles";
 import Sesion, { loadModel as loadSesionModel } from "../models/sesion";
+import Espacios, { loadModel as loadEspaciosModel } from "../models/espacios";
+import Estatus, { loadModel as loadEstatusModel } from "../models/estatus";
+import Reservas, { loadModel as loadReservasModel } from "../models/reservas";
 
 let sequelize: Sequelize;
 
@@ -27,6 +30,9 @@ const sequelizeLoader = async () => {
   loadUsuarioModel(sequelize);
   loadRolModel(sequelize);
   loadSesionModel(sequelize);
+  loadEspaciosModel(sequelize);
+  loadEstatusModel(sequelize);
+  loadReservasModel(sequelize);
 
 
   return sequelize;

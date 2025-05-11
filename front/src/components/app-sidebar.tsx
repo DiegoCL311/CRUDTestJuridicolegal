@@ -11,6 +11,7 @@ import {
   SidebarMenuSubItem,
   SidebarRail,
 } from "@/components/ui/sidebar"
+import { useNavigate } from "react-router-dom";
 
 interface SidebarItem {
   title: string;
@@ -24,13 +25,15 @@ interface AppSidebarProps {
 }
 
 export function AppSidebar({ menu, ...props }: AppSidebarProps) {
+  const navigate = useNavigate();
+
   return (
     <Sidebar {...props}>
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <a href="#">
+              <div onClick={() => { navigate('/') }} className="flex items-center gap-2">
                 <div className="text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
                   <img src="/vite.svg" alt="" />
                 </div>
@@ -40,7 +43,7 @@ export function AppSidebar({ menu, ...props }: AppSidebarProps) {
                     Vite + React
                   </span>
                 </div>
-              </a>
+              </div>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
@@ -51,16 +54,14 @@ export function AppSidebar({ menu, ...props }: AppSidebarProps) {
             {menu.map((item) => (
               <SidebarMenuItem key={item.title}>
                 <SidebarMenuButton asChild>
-                  <a href={item.url} className="font-medium">
-                    {item.title}
-                  </a>
+                  <div className="font-medium" onClick={() => { navigate(item.url) }}>{item.title}</div>
                 </SidebarMenuButton>
                 {item.items?.length ? (
                   <SidebarMenuSub>
                     {item.items.map((item: any) => (
                       <SidebarMenuSubItem key={item.title}>
                         <SidebarMenuSubButton asChild isActive={item.isActive}>
-                          <a href={item.url}>{item.title}</a>
+                          <div onClick={() => { navigate(item.url) }}>{item.title}</div>
                         </SidebarMenuSubButton>
                       </SidebarMenuSubItem>
                     ))}

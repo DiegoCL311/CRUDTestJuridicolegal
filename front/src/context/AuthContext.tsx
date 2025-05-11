@@ -1,7 +1,7 @@
 import React, { createContext, useState, type ReactNode } from "react";
-import { apiInstance } from "@/lib/api";
 import { type IUsuario } from "@/types/usuario";
 import { type IRol } from "@/types/rol";
+import { apiInstance } from "@/lib/api";
 
 // Define the type for the authentication state
 type AuthState = {
@@ -42,6 +42,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     rol: undefined,
     accessToken: undefined,
   });
+
 
   const logOut = async () => {
 

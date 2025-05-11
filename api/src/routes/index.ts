@@ -3,12 +3,18 @@ import testRoutes from "./test"
 import authRoutes from "./auth";
 import asyncErrorHandler from '../utils/asyncErrorHandler';
 import authMiddleware from "../middlewares/authMiddleware";
+import espaciosRoutes from "./espacios";
+import reservasRoutes from "./reservas";
 
 
 const app = express();
 
 // Rutas no protegidas por middleware de autenticación
 app.use("/auth", authRoutes);
+
+app.use("/espacios", asyncErrorHandler(authMiddleware), espaciosRoutes);
+
+app.use("/reservas", asyncErrorHandler(authMiddleware), reservasRoutes);
 
 // Rutas protegidas por middleware de autenticación
 app.get("/test", asyncErrorHandler(authMiddleware), testRoutes);

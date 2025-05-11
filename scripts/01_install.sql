@@ -7,16 +7,6 @@ CREATE DATABASE IF NOT EXISTS reservaseventos;
 USE reservaseventos;
 
 
--- reservaseventos.estatus definition
-CREATE TABLE `estatus` (
-  `nEstatus` tinyint  NOT NULL,
-  `cEstatus` varchar(15) NOT NULL,
-  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`nEstatus`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
-
 -- reservaseventos.roles definition
 CREATE TABLE `roles` (
   `nRol` tinyint unsigned NOT NULL AUTO_INCREMENT,
@@ -30,18 +20,16 @@ CREATE TABLE `roles` (
 -- reservaseventos.usuarios definition
 CREATE TABLE `usuarios` (
   `nUsuario` int unsigned NOT NULL AUTO_INCREMENT,
+  `cUsuario` varchar(100) NOT NULL,
   `nRol` tinyint unsigned NOT NULL,
-  `nEstatus` tinyint NOT NULL DEFAULT '1',
   `cNombres` varchar(50) NOT NULL,
   `cApellidos` varchar(50) NOT NULL,
-  `cUsuario` varchar(100) NOT NULL,
   `cPassword` varchar(255) NOT NULL,
+  `bActivo` tinyint NOT NULL DEFAULT '1',
   `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`nUsuario`),
-  UNIQUE KEY `cUsuario` (`cUsuario`),
-  KEY `nEstatus` (`nEstatus`),
-  CONSTRAINT `usuarios_ibfk_1` FOREIGN KEY (`nEstatus`) REFERENCES `estatus` (`nEstatus`)
+  UNIQUE KEY `cUsuario` (`cUsuario`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 
@@ -51,7 +39,7 @@ CREATE TABLE `sesiones` (
   `nUsuario` int unsigned NOT NULL,
   `accessKey` varchar(768) NOT NULL,
   `refreshKey` varchar(768) NOT NULL,
-  `nEstatus` tinyint NOT NULL DEFAULT '1',
+  `bActivo` tinyint NOT NULL DEFAULT '1',
   `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`nSesion`),
@@ -59,4 +47,51 @@ CREATE TABLE `sesiones` (
   UNIQUE KEY `refreshKey` (`refreshKey`),
   KEY `nUsuario` (`nUsuario`),
   CONSTRAINT `sesiones_ibfk_1` FOREIGN KEY (`nUsuario`) REFERENCES `usuarios` (`nUsuario`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- reservaseventos.espacios definition
+CREATE TABLE `espacios` (
+  `nEspacio` int unsigned NOT NULL AUTO_INCREMENT,
+  `cEspacio` varchar(64) NOT NULL,
+  `cCapacidad` varchar(64) NOT NULL,
+  `cDescripcion` varchar(128) NOT NULL,
+  `cIcono` varchar(64) NOT NULL,
+  `cColor` varchar(64) NOT NULL,
+  `bActivo` tinyint NOT NULL DEFAULT '1',
+  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`nEspacio`),
+  UNIQUE KEY `cEspacio` (`cEspacio`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- reservaseventos.estatus definition
+CREATE TABLE `estatus` (
+  `nEstatus` tinyint  NOT NULL,
+  `cEstatus` varchar(15) NOT NULL,
+  `cColor` varchar(15) NOT NULL,
+  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`nEstatus`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- reservaseventos.reservas definition
+CREATE TABLE `reservas` (
+  `nFolio` int unsigned NOT NULL AUTO_INCREMENT,
+  `nEspacio` int unsigned NOT NULL,
+  `dFechaInicio` DATETIME NOT NULL,
+  `dFechaFin` DATETIME NOT NULL,
+  `nUsuario`int unsigned NOT NULL,
+  `cNombreSolicitante` varchar(100) NOT NULL,
+  `cDepartamento` varchar(64) NOT NULL,
+  `cDuracionEstimada` varchar(64) NOT NULL,
+  `cDescripcion` varchar(128) NOT NULL,
+  `nEstatus` tinyint NOT NULL DEFAULT '1',
+  `bActivo` tinyint NOT NULL DEFAULT '1',
+  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`nFolio`),
+  KEY `nEspacio` (`nEspacio`),
+  CONSTRAINT `reservas_ibfk_1` FOREIGN KEY (`nEspacio`) REFERENCES `espacios` (`nEspacio`),
+  CONSTRAINT `reservas_ibfk_2` FOREIGN KEY (`nUsuario`) REFERENCES `usuarios` (`nUsuario`),
+  CONSTRAINT `reservas_ibfk_3` FOREIGN KEY (`nEstatus`) REFERENCES `estatus` (`nEstatus`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;

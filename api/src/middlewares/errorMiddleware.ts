@@ -27,6 +27,7 @@ export function errorMiddleware(
         logger.error(error.stack);
       } else {
         new InternalError("Error interno.").send(res);
+        console.error(error);
       }
       break;
   }

@@ -14,7 +14,6 @@ import { Label } from "@/components/ui/label";
 import { zodResolver } from '@hookform/resolvers/zod';
 import { InfoIcon } from "lucide-react"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
-import { LoadingSpinner } from "./LoadingSpinner"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
 
@@ -46,7 +45,7 @@ export function Login({
 
   useEffect(() => {
     if (loading) {
-      const toastId = toast.loading('', {
+      toast.loading('', {
         position: 'top-right',
         duration: Infinity,
         style: { backgroundColor: 'transparent', width: 'fit-content' },

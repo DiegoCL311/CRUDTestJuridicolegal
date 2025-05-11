@@ -11,7 +11,10 @@ export function validateRequest(schema: ZodSchema, option: RequestProp = 'body')
         const resultado = schema.safeParse(datos);
         if (!resultado.success) {
             // Construir mensaje de error
-            const mensaje = resultado.error.errors.map(err => err.message).join(', ');
+            const mensaje = resultado.error.errors.map(err => {
+                const ruta = err.path.length ? err.path.join('.') : option;
+                return `${ruta}: ${err.message}`;
+            }).join(', ');
             throw new BadRequestError(mensaje);
         }
         next();

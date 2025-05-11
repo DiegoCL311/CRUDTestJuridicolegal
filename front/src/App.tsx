@@ -1,49 +1,44 @@
-import { useEffect, useState } from "react";
-import { Routes, Route, Outlet, Link, useNavigate } from "react-router-dom";
-import { roles } from './lib/utils'
-import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
+import React from "react";
+import { Routes, Route, Outlet, Link } from "react-router-dom";
+import { roles, findBreadcrumbs } from './lib/utils'
+
+//Components
 import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbSeparator, BreadcrumbPage } from "@/components/ui/breadcrumb";
+import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
 import { AppSidebar } from "@/components/app-sidebar";
-
+import { LogoutButton } from "@/components/LogoutButton";
+import { ModeToggle } from "./components/ModeToggle";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { Toaster } from "@/components/ui/sonner";
 
-
-import useRefreshToken from '@/hooks/useRefreshToken';
+//Hooks
+import { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { Login } from "@/components/Login";
-import { ModeToggle } from "./components/ModeToggle";
-import { LogoutButton } from "@/components/LogoutButton";
+import { useRefreshToken } from '@/hooks/useRefreshToken';
+
+//Pages
+import { Login } from "@/pages/Login";
+import { LandingPage } from "./pages/LandingPage";
+import { SolicitudReserva } from "./pages/SolicitudReserva";
+
+import '@ant-design/v5-patch-for-react-19';
+
 
 const data = [
   {
-    title: "Getting Started",
-    url: "#",
+    title: "Reservas",
+    url: "",
     items: [
       {
-        title: "Installation",
-        url: "#",
+        title: "Registro de Reservas",
+        url: "/reservas/solicitud",
       },
       {
-        title: "Project Structure",
-        url: "#",
+        title: "Consulta de Reservas",
+        url: "/reservas",
       },
-    ],
-  },
-  {
-    title: "Building Your Application",
-    url: "#",
-    items: [
-      {
-        title: "Routing",
-        url: "#",
-      },
-      {
-        title: "Data Fetching",
-        url: "#",
-        isActive: true,
-      }
     ],
   }
 ]
@@ -81,7 +76,9 @@ export default function App() {
       return (
         <Routes>
           <Route path="/" element={<Layout />}>
-            <Route index={true} element={<></>} />
+            <Route index={true} element={<LandingPage />} />
+            <Route path="reservas" element={<LandingPage />} />
+            <Route path="reservas/solicitud" element={<SolicitudReserva />} />
             <Route path="abc/:id" element={<></>} />
 
           </Route>
@@ -93,6 +90,9 @@ export default function App() {
       return (
         <Routes>
           <Route path="/" element={<Layout />}>
+            <Route index={true} element={<LandingPage />} />
+            <Route path="reservas" element={<LandingPage />} />
+            <Route path="reservas/solicitud" element={<SolicitudReserva />} />
             <Route index={true} element={<></>} />
           </Route>
 
@@ -113,39 +113,14 @@ export default function App() {
   }
 }
 
-/*
-function AdminLayout() {
-  return (
-    <div>
-      <Header />
 
-      <Menu />
 
-      <div className="py-12">
-        <Outlet />
-      </div>
 
-      <Cintillo />
-      <Footer />
-    </div>
-  );
-}
+export function Layout() {
+  const location = useLocation();
+  const crumbs = findBreadcrumbs(data, location.pathname) || [];
+  const navigate = useNavigate();
 
-function UnloggedLayout() {
-  return (
-    <div>
-      <Header />
-      <div className="py-12">
-        <Outlet />
-      </div>
-      <Cintillo />
-      <Footer />
-    </div>
-  );
-}
-  */
-
-function Layout() {
   return (
     <SidebarProvider>
       <AppSidebar menu={data} />
@@ -156,20 +131,26 @@ function Layout() {
             <Separator orientation="vertical" className="mr-2 h-4" />
             <Breadcrumb>
               <BreadcrumbList>
-                <BreadcrumbItem className="hidden md:block">
-                  <BreadcrumbLink href="#">
-                    Building Your Application
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator className="hidden md:block" />
-                <BreadcrumbItem>
-                  <BreadcrumbPage>Data Fetching</BreadcrumbPage>
-                </BreadcrumbItem>
+                {crumbs.map((crumb, index) => {
+                  const isLast = index === crumbs.length - 1;
+                  return (
+                    <React.Fragment key={crumb.url}>
+                      <BreadcrumbItem>
+                        {isLast ? (
+                          <BreadcrumbPage className="hover:cursor-pointer">{crumb.title}</BreadcrumbPage>
+                        ) : (
+                          <BreadcrumbLink className="hover:cursor-pointer" onClick={() => { navigate(crumb.url) }}>{crumb.title}</BreadcrumbLink>
+                        )}
+                      </BreadcrumbItem>
+                      {!isLast && <BreadcrumbSeparator className="hidden md:block" />}
+                    </React.Fragment>
+                  );
+                })}
               </BreadcrumbList>
             </Breadcrumb>
             <Separator orientation="vertical" className="mr-2 h-4" />
           </div>
-          <div className="ml-auto flex items-center gap-2 px-3  ">
+          <div className="ml-auto flex items-center gap-2 px-3">
             <ModeToggle />
             <LogoutButton />
           </div>
@@ -178,8 +159,9 @@ function Layout() {
         <Toaster />
       </SidebarInset>
     </SidebarProvider>
-  )
+  );
 }
+
 
 function BasicLayout() {
   return (

@@ -9,7 +9,7 @@ export interface ISesion {
   nUsuario: number;
   accessKey: string;
   refreshKey: string;
-  nEstatus: number;
+  bActivo: number;
 }
 
 // 2. z SCHEMA IDataUsuario
@@ -18,7 +18,7 @@ export const rolSchema = z.object({
   nUsuario: z.string().min(3).max(20),
   accessKey: z.string().min(3).max(20),
   refreshKey: z.string().min(3).max(20),
-  nEstatus: z.number().min(1),
+  bActivo: z.number().min(1),
 })
 
 
@@ -32,7 +32,7 @@ export class Sesion
   declare public nUsuario: number;
   declare public accessKey: string;
   declare public refreshKey: string;
-  declare public nEstatus: number;
+  declare public bActivo: number;
   declare public readonly createdAt: Date;
   declare public readonly updatedAt: Date;
 
@@ -44,14 +44,14 @@ export class Sesion
       nUsuario,
       accessKey,
       refreshKey,
-      nEstatus,
+      bActivo,
     } = this.get({ plain: true });
     return {
       nSesion,
       nUsuario,
       accessKey,
       refreshKey,
-      nEstatus,
+      bActivo,
     };
   }
 
@@ -83,7 +83,7 @@ export const loadModel = (sequelize: Sequelize) => {
         type: DataTypes.STRING(20),
         allowNull: false,
       },
-      nEstatus: {
+      bActivo: {
         type: DataTypes.INTEGER,
         allowNull: false,
       },

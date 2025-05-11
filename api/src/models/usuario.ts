@@ -15,19 +15,19 @@ export interface IUsuario {
   nUsuario: number;
   cUsuario: string;
   nRol: number;
-  nEstatus: number;
+  bActivo: number;
   cNombres: string;
   cApellidos: string;
 }
 
 export interface IUsuarioFull {
   nUsuario: number;
+  cUsuario: string;
   nRol: number;
-  nEstatus: number;
   cNombres: string;
   cApellidos: string;
-  cUsuario: string;
   cPassword: string;
+  bActivo: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -51,11 +51,10 @@ export const loginSchema = z.object({
 // 3. SEQUELIZE MODEL WITH INSTANCE METHODS
 //
 export class Usuario
-  extends Model<IUsuarioFull, IDataUsuario>
-  implements IUsuarioFull {
+  extends Model<IUsuarioFull, IDataUsuario> implements IUsuarioFull {
   declare public nUsuario: number;
   declare public nRol: number;
-  declare public nEstatus: number;
+  declare public bActivo: number;
   declare public cNombres: string;
   declare public cApellidos: string;
   declare public cUsuario: string;
@@ -67,9 +66,9 @@ export class Usuario
    * Regresa un objeto IUsuario sin la contraseña ni timestamps
    */
   public toUsuario(): IUsuario {
-    const { nUsuario, nRol, nEstatus, cNombres, cApellidos, cUsuario } =
+    const { nUsuario, nRol, bActivo, cNombres, cApellidos, cUsuario } =
       this.get({ plain: true });
-    return { nUsuario, nRol, nEstatus, cNombres, cApellidos, cUsuario };
+    return { nUsuario, nRol, bActivo, cNombres, cApellidos, cUsuario };
   }
 
   /**
@@ -93,7 +92,7 @@ export const loadModel = (sequelize: Sequelize) => {
         type: DataTypes.TINYINT.UNSIGNED,
         allowNull: false,
       },
-      nEstatus: {
+      bActivo: {
         type: DataTypes.TINYINT.UNSIGNED,
         allowNull: false,
         defaultValue: 1,

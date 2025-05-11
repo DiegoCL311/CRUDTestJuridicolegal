@@ -30,4 +30,4 @@ const useRefreshToken = () => {
   return { refreshToken };
 };
 
-export default useRefreshToken;
+export { useRefreshToken };
