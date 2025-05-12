@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { DatePicker, Space } from 'antd';
 import type { GetProps } from 'antd';
 import dayjs, { Dayjs } from 'dayjs';
@@ -9,18 +9,20 @@ dayjs.extend(customParseFormat);
 type RangePickerProps = GetProps<typeof DatePicker.RangePicker>;
 type DisabledRange = { start: Dayjs; end: Dayjs };
 
-
 interface DateTimePickerProps {
     disabledRanges: DisabledRange[];
+    value: [Dayjs | null, Dayjs | null];
     onCalendarChange: (dates: [Dayjs | null, Dayjs | null]) => void;
+    disabled?: boolean;
 }
 
-export const DateTimePicker: React.FC<DateTimePickerProps> = ({ disabledRanges = [], onCalendarChange }) => {
-    const [selectedDates, setSelectedDates] = useState<[Dayjs | null, Dayjs | null]>([null, null]);
+export const DateTimePicker: React.FC<DateTimePickerProps> = ({ disabledRanges = [], value, onCalendarChange, disabled }) => {
+    // Rango seleccionado controlado desde props
+    const selectedDates = value;
 
     // Calcula rangos dinámicos incluyendo bloqueo hacia atrás y hacia adelante
     const dynamicRanges = useMemo(() => {
-        const [startSel] = selectedDates || [null, null];
+        const [startSel] = selectedDates;
         if (startSel) {
             const anteriores = disabledRanges.filter(r => r.end.isBefore(startSel));
             const posteriores = disabledRanges.filter(r => r.start.isAfter(startSel));
@@ -36,7 +38,7 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({ disabledRanges =
             return ranges;
         }
         return disabledRanges;
-    }, [selectedDates]);
+    }, [selectedDates, disabledRanges]);
 
     // Deshabilita días según cualquier rango dinámico
     const disabledDate = (current: Dayjs) => !!current && dynamicRanges.some(r => current.isAfter(r.start, 'day') && current.isBefore(r.end, 'day'));
@@ -44,7 +46,7 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({ disabledRanges =
     // Deshabilita horas y minutos según rangos y tipo (inicio/fin)
     const disabledTimePicker: RangePickerProps['disabledTime'] = (current, type) => {
         if (!current) return { disabledHours: () => [], disabledMinutes: () => [], disabledSeconds: () => [] };
-        const ranges = type === 'start' ? dynamicRanges : dynamicRanges;
+        const ranges = dynamicRanges;
         const horasDes: Set<number> = new Set();
         ranges.forEach(r => {
             const mismaInicio = current.isSame(r.start, 'day');
@@ -76,17 +78,16 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({ disabledRanges =
     return (
         <Space direction="vertical" size={12}>
             <DatePicker.RangePicker
+                className='!bg-white !font-bold'
+                value={selectedDates}
                 disabledDate={disabledDate}
                 disabledTime={disabledTimePicker}
                 showTime={{ hideDisabledOptions: false }}
                 format="YYYY-MM-DD HH:00"
-                onCalendarChange={(dates) => setSelectedDates(dates as [Dayjs | null, Dayjs | null])}
-                onChange={(dates) => {
-                    const pick = dates as [Dayjs | null, Dayjs | null];
-                    setSelectedDates(pick);
-                    onCalendarChange?.(pick);
-                }}
-                minDate={dayjs(dayjs(), 'YYYY-MM-DD HH:mm')}
+                onCalendarChange={(dates) => onCalendarChange(dates as [Dayjs | null, Dayjs | null])}
+                onChange={(dates) => onCalendarChange(dates as [Dayjs | null, Dayjs | null])}
+                minDate={dayjs()}
+                disabled={disabled}
             />
         </Space>
     );

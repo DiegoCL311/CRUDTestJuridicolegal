@@ -8,7 +8,7 @@ export function cn(...inputs: ClassValue[]) {
 
 export const roles = {
   adminUser: "Administrador",
-  employeeUser: "Publicador",
+  employeeUser: "Empleado",
 };
 
 export type Usuario = {

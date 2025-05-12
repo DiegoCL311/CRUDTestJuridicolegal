@@ -1,5 +1,8 @@
 import { Model, Sequelize, DataTypes } from 'sequelize';
 import { z } from 'zod';
+import { Estatus } from './estatus'
+import { Espacio } from './espacios'
+import { Usuario } from './usuario'
 
 // 1. INTERFAZ DE TYPESCRIPT
 export interface IReserva {
@@ -88,6 +91,14 @@ export const loadModel = (sequelize: Sequelize) => {
         createdAt: 'createdAt',
         updatedAt: 'updatedAt',
     });
+
+    // Relaciones
+    Reserva.belongsTo(Espacio, { foreignKey: 'nEspacio', as: 'espacio' });
+    Espacio.hasMany(Reserva, { foreignKey: 'nEspacio', as: 'reservas' });
+    Reserva.belongsTo(Usuario, { foreignKey: 'nUsuario', as: 'usuario' });
+    Usuario.hasMany(Reserva, { foreignKey: 'nUsuario', as: 'reservas' });
+    Reserva.belongsTo(Estatus, { foreignKey: 'nEstatus', as: 'estatus' });
+    Estatus.hasMany(Reserva, { foreignKey: 'nEstatus', as: 'reservas' });
 };
 
 export default Reserva;

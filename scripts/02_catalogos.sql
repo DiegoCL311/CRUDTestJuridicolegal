@@ -17,4 +17,4 @@ INSERT INTO espacios (nEspacio, cEspacio, cCapacidad, cDescripcion, cIcono, cCol
 
 -- Usuario administrador -- TRUNCATE TABLE usuarios -- SELECT * FROM usuarios -- CONTRASEÑA: contraseña123
 INSERT INTO usuarios (nRol, bActivo, cUsuario, cNombres, cApellidos, cPassword) VALUES(1, 1, 'Admin','Adm Pepito','Sanchez', '$2b$10$8AvJ7twGj4HUSUR6J0wxIuNSIeakmuZfZbERJbWz95pRb/TUxcoQK');
-INSERT INTO usuarios (nRol, bActivo, cUsuario, cNombres, cApellidos, cPassword) VALUES(1, 1, 'Empleado','Emp Juan','Perez', '$2b$10$8AvJ7twGj4HUSUR6J0wxIuNSIeakmuZfZbERJbWz95pRb/TUxcoQK');
+INSERT INTO usuarios (nRol, bActivo, cUsuario, cNombres, cApellidos, cPassword) VALUES(2, 1, 'Empleado','Emp Juan','Perez', '$2b$10$8AvJ7twGj4HUSUR6J0wxIuNSIeakmuZfZbERJbWz95pRb/TUxcoQK');

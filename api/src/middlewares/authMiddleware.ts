@@ -5,6 +5,7 @@ import { AuthFailureError, BadRequestError } from "../core/ApiError";
 import { getAccessToken, validateTokenData } from '../utils/authUtils'
 import JWT from '../core/jwt';
 import Usuario from "../models/usuario";
+import RolModel from "../models/roles";
 
 const authMiddleware = async (req: Request, res: Response, next: NextFunction) => {
 
@@ -23,6 +24,11 @@ const authMiddleware = async (req: Request, res: Response, next: NextFunction) =
     if (!usuario) throw new BadRequestError("Usuario no encontrado");
 
     req.usuario = usuario;
+
+    const rol = await RolModel.findByPk(usuario.nRol).then((rol) => rol?.toJSON());
+    if (!rol) throw new BadRequestError("Rol no encontrado");
+
+    req.rol = rol;
 
     next();
   } catch (error) {

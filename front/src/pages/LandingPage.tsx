@@ -15,7 +15,7 @@ export function LandingPage() {
 
                     </div>
                 </div>
-                <div className="aspect-video rounded-xl bg-muted/50 cursor-pointer hover:border-2 hover:bg-muted/70 transition-all duration-300 ease-in-out" onClick={() => navigate('/reservas')}>
+                <div className="aspect-video rounded-xl bg-muted/50 cursor-pointer hover:border-2 hover:bg-muted/70 transition-all duration-300 ease-in-out" onClick={() => navigate('/reservas/consultar')}>
                     <div className="flex h-full items-center justify-center text-muted-foreground">
                         <h1 className="text-2xl font-bold">Consultar Reservas </h1>
                         <Eye className="ml-4 h-12 w-12" />

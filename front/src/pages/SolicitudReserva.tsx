@@ -18,6 +18,10 @@ import { ExclamationCircleFilled } from '@ant-design/icons';
 import { toast } from "sonner"
 import { useNavigate } from 'react-router-dom';
 import { Modal } from 'antd';
+import { useParams } from 'react-router-dom';
+import { Badge } from "@/components/ui/badge";
+
+
 
 const { confirm } = Modal;
 
@@ -41,84 +45,78 @@ type DisabledRange = { start: Dayjs; end: Dayjs };
 
 export function SolicitudReserva(): React.JSX.Element {
     const form = useForm<FormData>({ resolver: zodResolver(schema) });
+    const { nFolio } = useParams();
     const { espacios } = useEspacios();
+    const navigate = useNavigate();
     const { field: fieldInicio } = useController({ name: 'dFechaInicio', control: form.control });
     const { field: fieldFin } = useController({ name: 'dFechaFin', control: form.control });
-    const { errors } = form.formState;
     const api = useAxios();
     const nEspacioSeleccionado = useWatch({ control: form.control, name: 'nEspacio' });
     const [disabledDates, setDisabledDates] = useState<DisabledRange[]>([]);
-    const navigate = useNavigate();
     const [disabledbutton, setDisabledbutton] = useState(false);
+    const { errors } = form.formState;
+    const [modo, setModo] = useState<'editar' | 'nuevo' | 'ver'>('nuevo');
+    const [primeraCarga, setPrimera] = useState(true);
+    const [estatus, setEstatus] = useState<any>(null);
+
+    useEffect(() => {
+        if (!nFolio) return;
+
+        api.get(`/reservas/obtener-reserva/${nFolio}`)
+            .then(res => {
+                const { nEspacio,
+                    dFechaInicio,
+                    dFechaFin,
+                    cNombreSolicitante,
+                    cDepartamento,
+                    cDuracionEstimada,
+                    cDescripcion,
+                    nEstatus,
+                    estatus } = res.data.data
+
+                form.setValue('nEspacio', nEspacio);
+                form.setValue('dFechaInicio', new Date(dFechaInicio));
+                form.setValue('dFechaFin', new Date(dFechaFin));
+                form.setValue('cNombreSolicitante', cNombreSolicitante);
+                form.setValue('cDepartamento', cDepartamento);
+                form.setValue('cDuracionEstimada', cDuracionEstimada);
+                form.setValue('cDescripcion', cDescripcion);
+
+                if (nEstatus == 1) {
+                    setModo('editar');
+                } else {
+                    setModo('ver');
+                }
+                setEstatus(estatus);
+
+            })
+            .catch(err => {
+                console.error('Error al obtener datos de la reserva', err)
+                toast.error('Error al obtener datos de la reserva', {
+                    description: 'Hubo un error al obtener los datos de la reserva. Por favor, inténtalo de nuevo más tarde.',
+                    duration: 5000,
+                    position: 'top-right',
+                    descriptionClassName: 'font-bold color-primary',
+                    icon: <DynamicIcon name="x" size={16} className="text-red-500" />,
+                })
+            });
+    }, [nFolio]);
 
 
 
-
-    // Manejador de envío válido
-    async function onSubmit(data: FormData) {
-        console.log('Envío correcto:', data);
-        setDisabledbutton(true);
-        confirm({
-            title: '¿Estas seguro?',
-            icon: <ExclamationCircleFilled />,
-            okText: 'Continuar',
-            cancelText: 'Cancelar',
-            content:
-                <div>
-                    ¿Estás seguro de que deseas enviar la solicitud de reserva?
-                    <br />
-                    Verifica que la información sea correcta antes de continuar.
-                    <p className="text-sm text-muted-foreground"><strong>Espacio: </strong>{espacios?.find(e => e.nEspacio === nEspacioSeleccionado)?.cEspacio}</p>
-                    <p className="text-sm text-muted-foreground"><strong>Fecha y hora:</strong> {fieldInicio.value?.toLocaleString()} - {fieldFin.value?.toLocaleString()}</p>
-                    <p className="text-sm text-muted-foreground"><strong>Solicitante:</strong> {form.getValues('cNombreSolicitante')}</p>
-                    <p className="text-sm text-muted-foreground"><strong>Departamento:</strong> {form.getValues('cDepartamento')}</p>
-                    <p className="text-sm text-muted-foreground"><strong>Duración: </strong>{form.getValues('cDuracionEstimada')}</p>
-                    <p className="text-sm text-muted-foreground"><strong>Descripción: </strong>{form.getValues('cDescripcion')}</p>
-                    <p className="text-sm text-muted-foreground"><strong>Recuerda que la solicitud está sujeta a aprobación por parte del administrador.</strong></p>
-                </div>,
-            onOk() {
-                return new Promise(async (resolve, reject) => {
-                    try {
-                        const request = await api.post('/reservas/registrar', data)
-                        toast.success('Solicitud enviada correctamente', {
-                            description: `La solicitud de reserva ha sido enviada. Tu numero de folio es: ${request.data.data.nFolio}`,
-                            duration: 5000,
-                            position: 'top-right',
-                            descriptionClassName: 'text-sm text-black',
-                        })
-
-                        setTimeout(() => {
-                            navigate('/reservas', { replace: true });
-                        }, 2000);
-
-                        resolve(true);
-
-
-                    } catch (error) {
-                        console.error('Error al enviar la solicitud:', error);
-                        toast.error('Error al enviar la solicitud', {
-                            description: 'Hubo un error al enviar la solicitud de reserva. Por favor, inténtalo de nuevo más tarde.',
-                            duration: 5000,
-                            position: 'top-right',
-                        })
-                        reject(false);
-
-                    }
-
-                    setTimeout(Math.random() > 0.5 ? resolve : reject, 1000);
-                }).catch(() => console.log('Oops errors!'));
-            },
-            onCancel() {
-                setDisabledbutton(false);
-            },
-        });
-
-    }
 
 
 
     useEffect(() => {
-        if (!nEspacioSeleccionado) return;
+        if (!nEspacioSeleccionado) {
+            return;
+        }
+        if (primeraCarga) {
+            setPrimera(false);
+        } else {
+            form.resetField('dFechaInicio');
+            form.resetField('dFechaFin');
+        }
 
         api.get(`/reservas/obtenerReservasAprovadasByespacio/${nEspacioSeleccionado}`)
             .then(res => {
@@ -129,16 +127,140 @@ export function SolicitudReserva(): React.JSX.Element {
                 //console.log('Fechas a deshabilitar:', fechas);
                 setDisabledDates(fechas);
             })
-            .catch(err => console.error('Error al obtener fechas del espacio:', err));
+            .catch(_err => {
+                toast.error('Error al obtener fechas ocupadas')
+                setDisabledbutton(true);
+            });
+
+        // Resetear campos de fecha al cambiar el espacio seleccionado, pero no la primera carga si es actualizar
+
     }, [nEspacioSeleccionado]);
+
+    // Enviar nueva reserva
+    async function onSubmitNuevo(data: FormData) {
+        console.log('Envío correcto:', data);
+        setDisabledbutton(true);
+        confirm({
+            title: '¿Estas seguro que deseas guardar?',
+            icon: <ExclamationCircleFilled />,
+            okText: 'Continuar',
+            cancelText: 'Cancelar',
+            content:
+                <div>
+                    ¿Estás seguro de que deseas enviar la solicitud de reserva?
+                    <br />
+                    Verifica que la información sea correcta antes de continuar.
+                    <p><strong>Espacio: </strong>{espacios?.find(e => e.nEspacio === nEspacioSeleccionado)?.cEspacio}</p>
+                    <p><strong>Fecha y hora:</strong> {fieldInicio.value?.toLocaleString()} - {fieldFin.value?.toLocaleString()}</p>
+                    <p><strong>Solicitante:</strong> {form.getValues('cNombreSolicitante')}</p>
+                    <p><strong>Departamento:</strong> {form.getValues('cDepartamento')}</p>
+                    <p><strong>Duración: </strong>{form.getValues('cDuracionEstimada')}</p>
+                    <p><strong>Descripción: </strong>{form.getValues('cDescripcion')}</p>
+                    <p><strong>Recuerda que la solicitud está sujeta a aprobación por parte del administrador.</strong></p>
+                </div>,
+            onOk() {
+                return new Promise(async (resolve, reject) => {
+                    try {
+                        const request = await api.post('/reservas/registrar', data)
+                        toast.success('Solicitud enviada correctamente', {
+                            description: `La solicitud de reserva ha sido enviada. Tu numero de folio es: ${request.data.data.nFolio}`,
+                            duration: 5000,
+                            position: 'top-right',
+                            descriptionClassName: 'font-bold color-primary',
+                            icon: <DynamicIcon name="check" size={16} className="text-green-500" />,
+                        })
+
+                        navigate('/reservas', { replace: true });
+
+                    } catch (error) {
+                        console.error('Error al enviar la solicitud:', error);
+                        toast.error('Error al enviar la solicitud', {
+                            description: 'Hubo un error al enviar la solicitud de reserva. Por favor, inténtalo de nuevo más tarde.',
+                            duration: 5000,
+                            position: 'top-right',
+                            descriptionClassName: 'font-bold color-primary',
+                            icon: <DynamicIcon name="x" size={16} className="text-red-500" />,
+                        })
+
+                    }
+
+                    setTimeout(Math.random() > 0.5 ? resolve : reject, 1000);
+                }).catch(() => console.log('Oops errors!'));
+            },
+            onCancel() {
+                setDisabledbutton(false);
+            },
+        });
+    }
+    // Enviar nueva reserva
+    async function onSubmitActualizar(data: FormData) {
+        console.log('Envío correcto:', data);
+        setDisabledbutton(true);
+        confirm({
+            title: '¿Estas seguro que deseas actualizar?',
+            icon: <ExclamationCircleFilled />,
+            okText: 'Continuar',
+            cancelText: 'Cancelar',
+            content:
+                <div>
+                    ¿Estás seguro de que deseas <strong>actualizar</strong> la solicitud de reserva?
+                    <br />
+                    Verifica que la información sea correcta antes de continuar.
+                    <p><strong>Espacio: </strong>{espacios?.find(e => e.nEspacio === nEspacioSeleccionado)?.cEspacio}</p>
+                    <p><strong>Fecha y hora:</strong> {fieldInicio.value?.toLocaleString()} - {fieldFin.value?.toLocaleString()}</p>
+                    <p><strong>Solicitante:</strong> {form.getValues('cNombreSolicitante')}</p>
+                    <p><strong>Departamento:</strong> {form.getValues('cDepartamento')}</p>
+                    <p><strong>Duración: </strong>{form.getValues('cDuracionEstimada')}</p>
+                    <p><strong>Descripción: </strong>{form.getValues('cDescripcion')}</p>
+                    <p><strong>Recuerda que la solicitud está sujeta a aprobación por parte del administrador.</strong></p>
+                </div>,
+            onOk() {
+                return new Promise(async (resolve, reject) => {
+                    try {
+                        const request = await api.put(`/reservas/actualizar/${nFolio}`, data)
+                        toast.success('Solicitud actualizada correctamente', {
+                            description: `La solicitud de reserva ${request.data.data.nFolio} a sido actualizada.`,
+                            duration: 5000,
+                            position: 'top-right',
+                            descriptionClassName: 'font-bold color-primary',
+                            icon: <DynamicIcon name="check" size={16} className="text-green-500" />,
+                        })
+
+                        navigate('/reservas', { replace: true });
+
+
+
+                    } catch (error) {
+                        console.error('Error al actualizar:', error);
+                        toast.error('Error al actualizar la reserva', {
+                            description: 'Hubo un error al actualizar la reserva. Por favor, inténtalo de nuevo más tarde.',
+                            duration: 5000,
+                            position: 'top-right',
+                            descriptionClassName: 'font-bold color-primary',
+                            icon: <DynamicIcon name="x" size={16} className="text-red-500" />,
+                        })
+
+                    }
+
+                    setTimeout(Math.random() > 0.5 ? resolve : reject, 1000);
+                }).catch(() => console.log('Oops errors!'));
+            },
+            onCancel() {
+                setDisabledbutton(false);
+            },
+        });
+    }
 
     return (
         <div className="flex flex-1 flex-col gap-4 p-4">
-            <h1 className="text-2xl font-bold text-center my-4">Nueva Solicitud de Reserva</h1>
+            {modo === 'nuevo' && <h1 className="text-2xl font-bold text-center my-4">Nueva Solicitud de Reserva</h1>}
+            {modo === 'editar' && <h1 className="text-2xl font-bold text-center my-4">Modificar Solicitud de Reserva {nFolio} <Badge variant="outline" style={{ backgroundColor: estatus.cColor }} >{estatus.cEstatus}</Badge></h1>}
+            {modo === 'ver' && <h1 className="text-2xl font-bold text-center my-4">Ver Solicitud de Reserva <Badge variant="outline" style={{ backgroundColor: estatus.cColor }} >{estatus.cEstatus}</Badge> </h1>}
+
             <Separator />
             {/* Formulario con onSubmit directo */}
             <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <form onSubmit={modo == 'nuevo' ? form.handleSubmit(onSubmitNuevo) : form.handleSubmit(onSubmitActualizar)} className="space-y-4">
                     {/* Selección de espacio */}
                     <h2 className="text-xl font-bold text-center">Seleccione un espacio {errors.nEspacio && (
                         <Tooltip>
@@ -157,7 +279,10 @@ export function SolicitudReserva(): React.JSX.Element {
                                     className={
                                         `flex flex-col h-full rounded-xl bg-muted/100 cursor-pointer hover:border-3 hover:scale-105 transition-all duration-300 ease-in-out p-4 ${field.value === espacio.nEspacio ? 'border-3 border-primary scale-105' : ''}`
                                     }
-                                    onClick={() => field.onChange(espacio.nEspacio)}
+                                    onClick={() => {
+                                        if (modo == 'ver') return;
+                                        field.onChange(espacio.nEspacio)
+                                    }}
                                 >
                                     <Label className="justify-center">{espacio.cEspacio}</Label>
                                     <DynamicIcon className="mx-auto my-1" name={espacio.cIcono} size={64} />
@@ -184,6 +309,7 @@ export function SolicitudReserva(): React.JSX.Element {
                             <p className="text-sm text-muted-foreground">Seleccione un espacio para habilitar el calendario</p>
                         ) : (
                             <DateTimePicker
+                                value={[fieldInicio.value ? dayjs(fieldInicio.value) : null, fieldFin.value ? dayjs(fieldFin.value) : null]}
                                 disabledRanges={disabledDates}
                                 onCalendarChange={(dates: (Dayjs | null)[]) => {
                                     // Convertir Dayjs a Date para Zod
@@ -191,8 +317,11 @@ export function SolicitudReserva(): React.JSX.Element {
                                     fieldInicio.onChange(dFechaInicio?.toDate());
                                     fieldFin.onChange(dFechaFin?.toDate());
                                 }}
+                                disabled={modo == 'ver'}
                             />
-                        )}
+                        )
+
+                        }
                     </div>
 
                     {/* Detalles de la reserva */}
@@ -200,7 +329,7 @@ export function SolicitudReserva(): React.JSX.Element {
                         <FormItem>
                             <Label htmlFor="cNombreSolicitante">Nombre del solicitante</Label>
                             <FormControl>
-                                <Input id="cNombreSolicitante" placeholder="Nombre..." {...field} />
+                                <Input id="cNombreSolicitante" placeholder="Nombre..." {...field} disabled={modo == 'ver'} />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
@@ -210,7 +339,7 @@ export function SolicitudReserva(): React.JSX.Element {
                         <FormItem>
                             <Label htmlFor="cDepartamento">Departamento</Label>
                             <FormControl>
-                                <Input id="cDepartamento" placeholder="Departamento..." {...field} />
+                                <Input id="cDepartamento" placeholder="Departamento..." {...field} disabled={modo == 'ver'} />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
@@ -220,7 +349,7 @@ export function SolicitudReserva(): React.JSX.Element {
                         <FormItem>
                             <Label htmlFor="cDuracionEstimada">Duración estimada</Label>
                             <FormControl>
-                                <Input id="cDuracionEstimada" type="text" placeholder="1 hora... 2 horas..." {...field} />
+                                <Input id="cDuracionEstimada" type="text" placeholder="1 hora... 2 horas..." {...field} disabled={modo == 'ver'} />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
@@ -231,13 +360,13 @@ export function SolicitudReserva(): React.JSX.Element {
                             <Label htmlFor="cDescripcion">Descripción del evento</Label>
                             <Label htmlFor="cDescripcion" className="text-xs">Breve resumen del propósito</Label>
                             <FormControl>
-                                <Textarea id="cDescripcion" {...field} />
+                                <Textarea id="cDescripcion" {...field} disabled={modo == 'ver'} />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
                     )} />
-
-                    <Button type="submit" disabled={disabledbutton} className='float-right'>Solicitar</Button>
+                    {modo == 'nuevo' && <Button type="submit" disabled={disabledbutton} className='float-right'>Solicitar</Button>}
+                    {modo == 'editar' && <Button type="submit" disabled={disabledbutton} className='float-right'>Actualizar</Button>}
                 </form>
             </Form>
 

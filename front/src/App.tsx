@@ -23,11 +23,39 @@ import { useAxios } from "./hooks/usePrivateAxios";
 import { Login } from "@/pages/Login";
 import { LandingPage } from "./pages/LandingPage";
 import { SolicitudReserva } from "./pages/SolicitudReserva";
+import { MisReservas } from "./pages/MisReservas";
 
 import '@ant-design/v5-patch-for-react-19';
 
 
-const data = [
+const navegacionAdmin = [
+  {
+    title: "Reservas",
+    url: "",
+    items: [
+      {
+        title: "Registro de Reservas",
+        url: "/reservas/solicitud",
+      },
+      {
+        title: "Consultar mis Reservas",
+        url: "/reservas/consultar",
+      },
+    ],
+  },
+  {
+    title: "Gestion de Reservas",
+    url: "",
+    items: [
+      {
+        title: "Aprovar/Rechazar Reservas",
+        url: "/reservas/gestionar",
+      },
+    ],
+  },
+]
+
+const navegacionEmpleado = [
   {
     title: "Reservas",
     url: "",
@@ -73,16 +101,19 @@ export default function App() {
 
   if (isLoading) return (<LoadingSpinner />)
 
+  console.log("Auth", auth);
+
 
   switch (auth.rol?.cRol) {
     case roles.adminUser:
       return (
         <Routes>
-          <Route path="/" element={<Layout />}>
+          <Route path="/" element={<Layout data={navegacionAdmin} />}>
             <Route index={true} element={<LandingPage />} />
             <Route path="reservas" element={<LandingPage />} />
-            <Route path="reservas/consultar" element={<LandingPage />} />
             <Route path="reservas/solicitud" element={<SolicitudReserva />} />
+            <Route path="reservas/solicitud/:nFolio" element={<SolicitudReserva />} />
+            <Route path="reservas/consultar" element={<MisReservas />} />
             <Route path="abc/:id" element={<></>} />
 
           </Route>
@@ -93,10 +124,11 @@ export default function App() {
     case roles.employeeUser:
       return (
         <Routes>
-          <Route path="/" element={<Layout />}>
+          <Route path="/" element={<Layout data={navegacionEmpleado} />}>
             <Route index={true} element={<LandingPage />} />
-            <Route path="reservas" element={<LandingPage />} />
             <Route path="reservas/solicitud" element={<SolicitudReserva />} />
+            <Route path="reservas/solicitud/nFolio" element={<SolicitudReserva />} />
+            <Route path="reservas/consultar" element={<MisReservas />} />
             <Route index={true} element={<></>} />
           </Route>
 
@@ -120,10 +152,11 @@ export default function App() {
 
 
 
-export function Layout() {
+export const Layout: React.FC<{ data: any[] }> = ({ data }) => {
   const location = useLocation();
-  const crumbs = findBreadcrumbs(data, location.pathname) || [];
   const navigate = useNavigate();
+
+  const crumbs = findBreadcrumbs(data, location.pathname) || [];
 
   return (
     <SidebarProvider>

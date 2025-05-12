@@ -10,4 +10,12 @@ app.get('/obtenerReservasAprovadasByespacio/:nEspacio', asyncErrorHandler(reserv
 
 app.post('/registrar', validateRequest(reservaSchema), asyncErrorHandler(reservasController.registrarReserva));
 
+app.put('/actualizar/:nFolio', validateRequest(reservaSchema), asyncErrorHandler(reservasController.actualizarReserva));
+
+app.get('/mis-reservas', asyncErrorHandler(reservasController.misReservas));
+
+app.get('/', asyncErrorHandler(reservasController.obtenerReservas));
+
+app.get('/obtener-reserva/:nFolio', asyncErrorHandler(reservasController.obtenerReservaByFolio));
+
 export default app;
