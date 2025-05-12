@@ -26,6 +26,7 @@ import { SolicitudReserva } from "./pages/SolicitudReserva";
 import { MisReservas } from "./pages/MisReservas";
 
 import '@ant-design/v5-patch-for-react-19';
+import { GestionarReservas } from "./pages/GestionarReservas";
 
 
 const navegacionAdmin = [
@@ -114,6 +115,7 @@ export default function App() {
             <Route path="reservas/solicitud" element={<SolicitudReserva />} />
             <Route path="reservas/solicitud/:nFolio" element={<SolicitudReserva />} />
             <Route path="reservas/consultar" element={<MisReservas />} />
+            <Route path="reservas/gestionar" element={<GestionarReservas />} />
             <Route path="abc/:id" element={<></>} />
 
           </Route>

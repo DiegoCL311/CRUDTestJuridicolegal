@@ -1,4 +1,3 @@
-import React, { useEffect, useState } from 'react';
 import { Separator } from '@/components/ui/separator';
 import { useMisReservas } from '@/hooks/reservas';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
@@ -9,7 +8,7 @@ import { useNavigate } from 'react-router-dom';
 
 
 export const MisReservas = () => {
-    const { misReservas, cargando, error } = useMisReservas();
+    const { misReservas, cargando, } = useMisReservas();
     const navigate = useNavigate();
 
     if (cargando) {
