@@ -10,7 +10,7 @@ INSERT INTO roles (nRol, cRol) VALUES (1,"Administrador");
 INSERT INTO roles (nRol, cRol) VALUES (2,"Empleado");
 
 -- ESPACIOS -- TRUNCATE TABLE espacios -- SELECT * FROM espacios
-INSERT INTO espacios (nEspacio, cEspacio, cCapacidad, cDescripcion, cIcono, cColor) VALUES (1,"Sala de reuniones pequeña", "15", "Pequeña sala ideal para equipos pequeños a medianos.", "chalkboard", "#f7c740");
+INSERT INTO espacios (nEspacio, cEspacio, cCapacidad, cDescripcion, cIcono, cColor) VALUES (1,"Sala de reuniones pequeña", "15", "Pequeña sala ideal para equipos pequeños a medianos.", "notebook-pen", "#f7c740");
 INSERT INTO espacios (nEspacio, cEspacio, cCapacidad, cDescripcion, cIcono, cColor) VALUES (2,"Sala de reuniones grande", "30", "Sala de reuniones principal, ideal para equipos medianos a grandes.", "projector", "#479e36");
 INSERT INTO espacios (nEspacio, cEspacio, cCapacidad, cDescripcion, cIcono, cColor) VALUES (3,"Auditorio", "100", "Ideado para grandes conferencias.", "theater", "#c23636");
 INSERT INTO espacios (nEspacio, cEspacio, cCapacidad, cDescripcion, cIcono, cColor) VALUES (4,"Área de descanso", "6", "Zona de chill para relajarse con amigos.", "hamburger", "#f7c740");

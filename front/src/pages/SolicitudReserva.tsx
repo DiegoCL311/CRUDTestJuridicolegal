@@ -17,16 +17,15 @@ import { InfoIcon } from 'lucide-react';
 import { DeleteFilled, ExclamationCircleFilled } from '@ant-design/icons';
 import { toast } from "sonner"
 import { useNavigate } from 'react-router-dom';
-import { Modal } from 'antd';
 import { useParams } from 'react-router-dom';
 import { Badge } from "@/components/ui/badge";
 
-
-
-const { confirm } = Modal;
-
 import { z } from '@/lib/es-zod'
 import dayjs, { Dayjs } from 'dayjs';
+
+import { Modal } from 'antd';
+const { confirm } = Modal;
+
 
 // Definición de esquema con Zod
 const schema = z.object({
@@ -134,8 +133,8 @@ export function SolicitudReserva(): React.JSX.Element {
         api.get(`/reservas/obtenerReservasAprovadasByespacio/${nEspacioSeleccionado}`)
             .then(res => {
                 const fechas: DisabledRange[] = res.data.data.map((item: { dFechaInicio: string; dFechaFin: string }) => ({
-                    start: dayjs(item.dFechaInicio, 'YYYY-MM-DD HH:mm'),
-                    end: dayjs(item.dFechaFin, 'YYYY-MM-DD HH:mm')
+                    start: dayjs(new Date(item.dFechaInicio)),
+                    end: dayjs(new Date(item.dFechaFin))
                 }));
                 //console.log('Fechas a deshabilitar:', fechas);
                 setDisabledDates(fechas);
@@ -152,6 +151,8 @@ export function SolicitudReserva(): React.JSX.Element {
     // Enviar nueva reserva
     async function onSubmitNuevo(data: FormData) {
         console.log('Envío correcto:', data);
+
+
         setDisabledbutton(true);
         confirm({
             title: '¿Estas seguro que deseas guardar?',
@@ -364,6 +365,10 @@ export function SolicitudReserva(): React.JSX.Element {
                                 onCalendarChange={(dates: (Dayjs | null)[]) => {
                                     // Convertir Dayjs a Date para Zod
                                     const [dFechaInicio, dFechaFin] = dates || [null, null];
+
+                                    //console.log('Fechas seleccionadas inicio:', dFechaInicio, dFechaInicio?.toString());
+                                    //console.log('Fechas seleccionadas fin:', dFechaFin, dFechaFin?.toString());
+
                                     fieldInicio.onChange(dFechaInicio?.toDate());
                                     fieldFin.onChange(dFechaFin?.toDate());
                                 }}

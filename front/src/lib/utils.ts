@@ -55,3 +55,4 @@ type MenuItem = { title: string; url: string; items?: MenuItem[]; isActive?: boo
 
 // Función recursiva para buscar la ruta en el menú y devolver el camino de migas
 export function findBreadcrumbs(items: MenuItem[], pathname: string, trail: MenuItem[] = []): MenuItem[] | null { for (const item of items) { if (item.url === pathname) { return [...trail, item]; } if (item.items) { const result = findBreadcrumbs(item.items, pathname, [...trail, item]); if (result) { return result; } } } return null; }
+
