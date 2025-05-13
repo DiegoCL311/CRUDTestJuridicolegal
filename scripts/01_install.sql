@@ -95,3 +95,19 @@ CREATE TABLE `reservas` (
   CONSTRAINT `reservas_ibfk_2` FOREIGN KEY (`nUsuario`) REFERENCES `usuarios` (`nUsuario`),
   CONSTRAINT `reservas_ibfk_3` FOREIGN KEY (`nEstatus`) REFERENCES `estatus` (`nEstatus`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+
+-- reservaseventos.historialcambios definition
+CREATE TABLE `historialcambios` (
+  `nCambio` int unsigned NOT NULL AUTO_INCREMENT,
+  `nFolio` int unsigned NOT NULL,
+  `nUsuario` int unsigned NOT NULL,
+  `dFecha` DATETIME NOT NULL,
+  `cAccion` varchar(100) NOT NULL,
+  `bActivo` tinyint NOT NULL DEFAULT '1',
+  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`nCambio`),
+  CONSTRAINT `historialcambios_ibfk_1` FOREIGN KEY (`nFolio`) REFERENCES `reservas` (`nFolio`),
+  CONSTRAINT `historialcambios_ibfk_2` FOREIGN KEY (`nUsuario`) REFERENCES `usuarios` (`nUsuario`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;

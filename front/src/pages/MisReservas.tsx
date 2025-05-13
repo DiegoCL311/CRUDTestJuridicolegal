@@ -27,7 +27,7 @@ export const MisReservas = () => {
             <div className="grid auto-rows-min gap-4 md:grid-cols-3 ">
                 {misReservas?.map(reserva => (
                     <div key={reserva.nFolio}
-                        className={`flex flex-col aspect-video rounded-xl bg-muted/100  hover:border-3 hover:bg-muted/1 transition-all duration-300 ease-in-out p-4 gap-2 cursor-pointer`}
+                        className={`flex flex-col md:aspect-video max-w-full rounded-xl bg-muted/100  hover:border-3 hover:bg-muted/1 transition-all duration-300 ease-in-out p-4 gap-2 cursor-pointer`}
                         onClick={() => navigate(`/reservas/solicitud/${reserva.nFolio}`)}
                     >
                         <Label className="justify-center">Reserva {reserva.nFolio}

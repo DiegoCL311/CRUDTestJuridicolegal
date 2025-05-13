@@ -14,7 +14,7 @@ import { useEspacios } from '@/hooks/espacios';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useAxios } from '@/hooks/usePrivateAxios';
 import { InfoIcon } from 'lucide-react';
-import { ExclamationCircleFilled } from '@ant-design/icons';
+import { DeleteFilled, ExclamationCircleFilled } from '@ant-design/icons';
 import { toast } from "sonner"
 import { useNavigate } from 'react-router-dom';
 import { Modal } from 'antd';
@@ -46,7 +46,7 @@ type DisabledRange = { start: Dayjs; end: Dayjs };
 export function SolicitudReserva(): React.JSX.Element {
     const form = useForm<FormData>({ resolver: zodResolver(schema) });
     const { nFolio } = useParams();
-    const { espacios } = useEspacios();
+    const { espacios, error } = useEspacios();
     const navigate = useNavigate();
     const { field: fieldInicio } = useController({ name: 'dFechaInicio', control: form.control });
     const { field: fieldFin } = useController({ name: 'dFechaFin', control: form.control });
@@ -58,6 +58,19 @@ export function SolicitudReserva(): React.JSX.Element {
     const [modo, setModo] = useState<'editar' | 'nuevo' | 'ver'>('nuevo');
     const [primeraCarga, setPrimera] = useState(true);
     const [estatus, setEstatus] = useState<any>(null);
+
+    useEffect(() => {
+        if (error) {
+            toast.error('Error al cargar los espacios', {
+                description: 'Hubo un error al cargar los espacios. Por favor, inténtalo de nuevo más tarde.',
+                duration: 5000,
+                position: 'top-right',
+                descriptionClassName: 'font-bold color-primary',
+                icon: <DynamicIcon name="x" size={16} className="text-red-500" />,
+            })
+            setDisabledbutton(true);
+        }
+    }, [error]);
 
     useEffect(() => {
         if (!nFolio) return;
@@ -159,40 +172,37 @@ export function SolicitudReserva(): React.JSX.Element {
                     <p><strong>Recuerda que la solicitud está sujeta a aprobación por parte del administrador.</strong></p>
                 </div>,
             onOk() {
-                return new Promise(async (resolve, reject) => {
-                    try {
-                        const request = await api.post('/reservas/registrar', data)
-                        toast.success('Solicitud enviada correctamente', {
-                            description: `La solicitud de reserva ha sido enviada. Tu numero de folio es: ${request.data.data.nFolio}`,
-                            duration: 5000,
-                            position: 'top-right',
-                            descriptionClassName: 'font-bold color-primary',
-                            icon: <DynamicIcon name="check" size={16} className="text-green-500" />,
-                        })
+                return api.post('/reservas/registrar', data).then((res) => {
+                    toast.success('Solicitud enviada correctamente', {
+                        description: `La solicitud de reserva ha sido enviada. Tu numero de folio es: ${res.data.data.nFolio}`,
+                        duration: 5000,
+                        position: 'top-right',
+                        descriptionClassName: 'font-bold color-primary',
+                        icon: <DynamicIcon name="check" size={16} className="text-green-500" />,
+                    })
 
-                        navigate('/reservas', { replace: true });
+                    navigate('/reservas', { replace: true });
 
-                    } catch (error) {
-                        console.error('Error al enviar la solicitud:', error);
-                        toast.error('Error al enviar la solicitud', {
-                            description: 'Hubo un error al enviar la solicitud de reserva. Por favor, inténtalo de nuevo más tarde.',
-                            duration: 5000,
-                            position: 'top-right',
-                            descriptionClassName: 'font-bold color-primary',
-                            icon: <DynamicIcon name="x" size={16} className="text-red-500" />,
-                        })
 
-                    }
+                }).catch((error) => {
 
-                    setTimeout(Math.random() > 0.5 ? resolve : reject, 1000);
-                }).catch(() => console.log('Oops errors!'));
+                    console.error('Error al enviar la solicitud:', error);
+                    toast.error('Error al enviar la solicitud', {
+                        description: 'Hubo un error al enviar la solicitud de reserva. Por favor, inténtalo de nuevo más tarde.',
+                        duration: 5000,
+                        position: 'top-right',
+                        descriptionClassName: 'font-bold color-primary',
+                        icon: <DynamicIcon name="x" size={16} className="text-red-500" />,
+                    })
+                })
             },
             onCancel() {
                 setDisabledbutton(false);
             },
         });
     }
-    // Enviar nueva reserva
+
+    // Actualizar reserva
     async function onSubmitActualizar(data: FormData) {
         console.log('Envío correcto:', data);
         setDisabledbutton(true);
@@ -215,35 +225,28 @@ export function SolicitudReserva(): React.JSX.Element {
                     <p><strong>Recuerda que la solicitud está sujeta a aprobación por parte del administrador.</strong></p>
                 </div>,
             onOk() {
-                return new Promise(async (resolve, reject) => {
-                    try {
-                        const request = await api.put(`/reservas/actualizar/${nFolio}`, data)
-                        toast.success('Solicitud actualizada correctamente', {
-                            description: `La solicitud de reserva ${request.data.data.nFolio} a sido actualizada.`,
-                            duration: 5000,
-                            position: 'top-right',
-                            descriptionClassName: 'font-bold color-primary',
-                            icon: <DynamicIcon name="check" size={16} className="text-green-500" />,
-                        })
+                return api.put(`/reservas/actualizar/${nFolio}`, data).then((res) => {
+                    toast.success('Solicitud actualizada correctamente', {
+                        description: `La solicitud de reserva ${res.data.data.nFolio} a sido actualizada.`,
+                        duration: 5000,
+                        position: 'top-right',
+                        descriptionClassName: 'font-bold color-primary',
+                        icon: <DynamicIcon name="check" size={16} className="text-green-500" />,
+                    })
 
-                        navigate('/reservas', { replace: true });
+                    navigate('/reservas', { replace: true });
 
 
-
-                    } catch (error) {
-                        console.error('Error al actualizar:', error);
-                        toast.error('Error al actualizar la reserva', {
-                            description: 'Hubo un error al actualizar la reserva. Por favor, inténtalo de nuevo más tarde.',
-                            duration: 5000,
-                            position: 'top-right',
-                            descriptionClassName: 'font-bold color-primary',
-                            icon: <DynamicIcon name="x" size={16} className="text-red-500" />,
-                        })
-
-                    }
-
-                    setTimeout(Math.random() > 0.5 ? resolve : reject, 1000);
-                }).catch(() => console.log('Oops errors!'));
+                }).catch((error) => {
+                    console.error('Error al actualizar:', error);
+                    toast.error('Error al actualizar la reserva', {
+                        description: 'Hubo un error al actualizar la reserva. Por favor, inténtalo de nuevo más tarde.',
+                        duration: 5000,
+                        position: 'top-right',
+                        descriptionClassName: 'font-bold color-primary',
+                        icon: <DynamicIcon name="x" size={16} className="text-red-500" />,
+                    })
+                })
             },
             onCancel() {
                 setDisabledbutton(false);
@@ -251,11 +254,58 @@ export function SolicitudReserva(): React.JSX.Element {
         });
     }
 
+    // Enviar nueva reserva
+    async function eliminarReserva() {
+        setDisabledbutton(true);
+        confirm({
+            title: '¿Estas seguro que deseas eliminar la reserva?',
+            icon: <DeleteFilled />,
+            okText: 'Eliminar',
+            cancelText: 'Cancelar',
+            onOk() {
+                return api.delete(`/reservas/eliminar/${nFolio}`).then((_res) => {
+                    toast.success('Solicitud de reserva eliminada correctamente', {
+                        duration: 5000,
+                        position: 'top-right',
+                        descriptionClassName: 'font-bold color-primary',
+                        icon: <DynamicIcon name="check" size={16} className="text-green-500" />,
+                    })
+
+                    navigate('/reservas', { replace: true });
+
+                }).catch((error) => {
+                    console.error('Error al enviar la solicitud:', error);
+                    toast.error('Error al enviar la solicitud', {
+                        description: 'Hubo un error al enviar la solicitud de reserva. Por favor, inténtalo de nuevo más tarde.',
+                        duration: 5000,
+                        position: 'top-right',
+                        descriptionClassName: 'font-bold color-primary',
+                        icon: <DynamicIcon name="x" size={16} className="text-red-500" />,
+                    })
+                })
+            },
+            onCancel() {
+                setDisabledbutton(false);
+            },
+        });
+    }
+
+
+
     return (
         <div className="flex flex-1 flex-col gap-4 p-4">
-            {modo === 'nuevo' && <h1 className="text-2xl font-bold text-center my-4">Nueva Solicitud de Reserva</h1>}
-            {modo === 'editar' && <h1 className="text-2xl font-bold text-center my-4">Modificar Solicitud de Reserva {nFolio} <Badge variant="outline" style={{ backgroundColor: estatus.cColor }} >{estatus.cEstatus}</Badge></h1>}
-            {modo === 'ver' && <h1 className="text-2xl font-bold text-center my-4">Ver Solicitud de Reserva <Badge variant="outline" style={{ backgroundColor: estatus.cColor }} >{estatus.cEstatus}</Badge> </h1>}
+            <div className=" gap-2">
+                <div>
+
+                    {modo === 'nuevo' && <h1 className="text-2xl font-bold text-center my-4">Nueva Solicitud de Reserva</h1>}
+                    {modo === 'editar' && <h1 className="text-2xl font-bold text-center my-4">Modificar Solicitud de Reserva {nFolio}
+                        <Badge variant="outline" style={{ backgroundColor: estatus.cColor, marginLeft: 4 }} >{estatus.cEstatus}</Badge>
+                        <Button variant={'destructive'} className='float-right hover:cursor-pointer' onClick={() => { eliminarReserva() }}>Eliminar</Button>
+                    </h1>}
+                    {modo === 'ver' && <h1 className="text-2xl font-bold text-center my-4">Ver Solicitud de Reserva  <Badge variant="outline" style={{ backgroundColor: estatus.cColor }} >{estatus.cEstatus}</Badge></h1>}
+                </div>
+
+            </div>
 
             <Separator />
             {/* Formulario con onSubmit directo */}

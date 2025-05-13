@@ -18,4 +18,10 @@ app.get('/', asyncErrorHandler(reservasController.obtenerReservas));
 
 app.get('/obtener-reserva/:nFolio', asyncErrorHandler(reservasController.obtenerReservaByFolio));
 
+app.delete('/eliminar/:nFolio', asyncErrorHandler(reservasController.eliminarReserva));
+
+app.put('/aprovar/:nFolio', asyncErrorHandler(reservasController.aprovarReserva));
+
+app.put('/rechazar/:nFolio', asyncErrorHandler(reservasController.rechazarReserva));
+
 export default app;

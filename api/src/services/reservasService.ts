@@ -4,32 +4,34 @@ import { NoEntryError } from '../core/ApiError';
 /**
  * Obtiene reservas de un espacio por su ID.
  * @param {number} nEspacio – ID del espacio a buscar.
- * @returns {IReserva | null} – Reserva completo (incluye  timestamps).
+ * @returns {IReserva | null} – Reserva.
  */
 export const obtenerReservasAprovadasByEspacio = async (nEspacio: number): Promise<{ dFechaInicio: string, dFechaFin: string }[] | null> => {
     const reservas = await ReservaModel.findAll({
         where: { nEspacio, nEstatus: 2, bActivo: true },
     });
 
-    return reservas.flatMap((reserva) => { return { dFechaInicio: reserva.dFechaInicio, dFechaFin: reserva.dFechaFin } });
+    return reservas.map((reserva) => { return { dFechaInicio: reserva.dFechaInicio, dFechaFin: reserva.dFechaFin } });
 };
 
 /**
  * Obtiene reservas de un espacio por su ID.
- * @returns {IReserva | null} – Reserva completo (incluye  timestamps).
+ * @returns {IReserva | null} – Reserva.
  */
 export const obtenerReservas = async (): Promise<{ dFechaInicio: string, dFechaFin: string }[] | null> => {
     const reservas = await ReservaModel.findAll({
         where: { bActivo: true },
+        include: ['espacio', 'estatus', 'usuario'],
+        order: [['createdAt', 'DESC']],
     });
 
-    return reservas.flatMap((reserva) => { return { dFechaInicio: reserva.dFechaInicio, dFechaFin: reserva.dFechaFin } });
+    return reservas;
 };
 
 /**
- * Obtiene reservas de un espacio por su ID.
- * @param {number} nFolio – ID del espacio a buscar.
- * @returns {IReserva | null} – Reserva completo (incluye  timestamps).
+ * Obtiene una reserva por su ID.
+ * @param {number} nFolio – ID de la reserva a buscar.
+ * @returns {IReserva | null} – Reserva.
  */
 export const obtenerReservaByFolio = async (nFolio: number): Promise<IReserva | null> => {
     const reserva = await ReservaModel.findOne({
@@ -47,7 +49,7 @@ export const obtenerReservaByFolio = async (nFolio: number): Promise<IReserva | 
  * @param {IDataReserva} reserva – Campos del Reserva a crear.
  * @returns {IReserva} Objeto Reserva creado.
  */
-export const crearReserva = async (reserva: IDataReserva): Promise<IDataReserva> => {
+export const crearReserva = async (reserva: IDataReserva): Promise<IReserva> => {
     const ReservaInserted = await ReservaModel.create(reserva);
     return ReservaInserted.toObj();
 };
@@ -79,4 +81,57 @@ export const actualizarReserva = async (nFolio: number, reserva: Partial<IDataRe
     await instancia.update(reserva);
     return instancia.toObj();
 };
+
+
+/**
+ * Elimina un Reserva existente.
+ * @param {number} nFolio – ID del Reserva a eliminar.
+ * @returns {IReserva} – Reserva eliminado.
+ * @throws {NoEntryError} – Si no se encuentra el Reserva.
+ */
+export const eliminarReserva = async (nFolio: number): Promise<IDataReserva> => {
+    const instancia = await ReservaModel.findByPk(nFolio);
+    if (!instancia) throw new NoEntryError('Reserva no encontrada');
+    await instancia.update({ bActivo: false });
+    return instancia;
+}
+
+/**
+ * Aprovar una reserva.
+ * @param {number} nFolio – ID del Reserva a aprovar.
+ * @returns {IReserva} – Reserva.
+ * @throws {NoEntryError} – Si no se encuentra el Reserva.
+ */
+export const aprovarReserva = async (nFolio: number): Promise<IDataReserva> => {
+    const reserva = await ReservaModel.findByPk(nFolio, { include: ['espacio', 'estatus', 'usuario'] });
+    if (!reserva) throw new NoEntryError('Reserva no encontrada');
+
+    //Verificar si el periodo ya fue reservado
+    const reservas = await ReservaModel.findAll({
+        where: {
+            nEspacio: reserva.nEspacio,
+            dFechaInicio: { $between: [reserva.dFechaInicio, reserva.dFechaFin] },
+            dFechaFin: { $between: [reserva.dFechaInicio, reserva.dFechaFin] },
+            nEstatus: 2,
+            bActivo: true,
+        },
+    });
+    if (reservas.length > 0) throw new NoEntryError('El espacio ya fue reservado en ese periodo');
+
+    await reserva.update({ nEstatus: 2 });
+    return reserva;
+}
+
+/**
+ * Aprovar una reserva.
+ * @param {number} nFolio – ID del Reserva a aprovar.
+ * @returns {IReserva} – Reserva.
+ * @throws {NoEntryError} – Si no se encuentra el Reserva.
+ */
+export const rechazarReserva = async (nFolio: number): Promise<IDataReserva> => {
+    const reserva = await ReservaModel.findByPk(nFolio, { include: ['espacio', 'estatus', 'usuario'] });
+    if (!reserva) throw new NoEntryError('Reserva no encontrada');
+    await reserva.update({ nEstatus: 3 });
+    return reserva;
+}
 
