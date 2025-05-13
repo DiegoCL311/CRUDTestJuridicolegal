@@ -129,7 +129,7 @@ export default function App() {
           <Route path="/" element={<Layout data={navegacionEmpleado} />}>
             <Route index={true} element={<LandingPage />} />
             <Route path="reservas/solicitud" element={<SolicitudReserva />} />
-            <Route path="reservas/solicitud/nFolio" element={<SolicitudReserva />} />
+            <Route path="reservas/solicitud/:nFolio" element={<SolicitudReserva />} />
             <Route path="reservas/consultar" element={<MisReservas />} />
             <Route index={true} element={<></>} />
           </Route>

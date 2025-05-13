@@ -31,6 +31,7 @@ import { toast } from "sonner"
 import { DynamicIcon } from 'lucide-react/dynamic';
 import { useAxios } from '@/hooks/usePrivateAxios';
 import { LoadingSpinner } from "@/components/LoadingSpinner";
+import { useNavigate } from "react-router-dom";
 
 
 import { Modal } from 'antd';
@@ -43,6 +44,7 @@ export const GestionarReservas = () => {
     const api = useAxios();
     const [contador, useContador] = useState<number>(1);
     const [cargando, setCargando] = useState<boolean>(false);
+    const navigate = useNavigate();
 
 
 
@@ -180,6 +182,7 @@ export const GestionarReservas = () => {
                         <DropdownMenuContent align="end">
                             <DropdownMenuLabel>Acciones</DropdownMenuLabel>
                             <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => { editarSolicitud(nFolio) }}>Ver/Editar</DropdownMenuItem>
                             <DropdownMenuItem onClick={() => { aprovarSolicitudReserva(nFolio) }}>Aprovar</DropdownMenuItem>
                             <DropdownMenuItem onClick={() => { rechazarSolicitudReserva(nFolio) }}>Rechazar</DropdownMenuItem>
                             <DropdownMenuItem onClick={() => { eliminarSolicitudReserva(nFolio) }}>Eliminar</DropdownMenuItem>
@@ -201,8 +204,10 @@ export const GestionarReservas = () => {
                     ¿Estás seguro de que deseas <strong>Aprovar</strong> la solicitud de reserva?
                     <br />
                 </div>,
-            onOk() {
-                return api.put(`/reservas/aprovar/${nFolio}`).then(() => {
+            async onOk() {
+                try {
+                    await api.put(`/reservas/aprovar/${nFolio}`)
+
                     toast.success('Solicitud aprobada correctamente', {
                         description: `La solicitud de reserva ${nFolio} ha sido aprobada.`,
                         duration: 5000,
@@ -211,18 +216,17 @@ export const GestionarReservas = () => {
                         icon: <DynamicIcon name="check" size={16} className="text-green-500" />,
                     })
                     useContador(contador + 1);
-                }
-                ).catch((error) => {
+
+                } catch (error: any) {
                     console.error('Error al aprovar:', error);
                     toast.error('Error al aprovar la reserva', {
-                        description: 'Hubo un error al aprovar la reserva. Por favor, inténtalo de nuevo más tarde.',
+                        description: error.response.data.message,
                         duration: 5000,
                         position: 'top-right',
                         descriptionClassName: 'font-bold color-primary',
                         icon: <DynamicIcon name="x" size={16} className="text-red-500" />,
                     })
                 }
-                );
             },
         });
     }
@@ -353,6 +357,10 @@ export const GestionarReservas = () => {
                     icon: <DynamicIcon name="x" size={16} className="text-red-500" />,
                 });
             });
+    }
+
+    function editarSolicitud(nFolio: number) {
+        navigate(`/reservas/solicitud/${nFolio}`);
     }
 
     const table = useReactTable({

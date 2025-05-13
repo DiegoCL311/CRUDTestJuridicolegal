@@ -22,8 +22,13 @@ const obtenerReservas = async (req: Request, res: Response) => {
 
 const obtenerReservaByFolio = async (req: Request, res: Response) => {
     const nFolio = Number(req.params?.nFolio);
+    const nUsuario = req.usuario?.nUsuario;
+    const nRol = req.rol?.nRol;
 
     const reservas = await reservasService.obtenerReservaByFolio(nFolio);
+
+    if ((reservas.nUsuario != nUsuario) && !(nRol == 1)) throw new AuthFailureError("No se pudo acceder a la reserva");
+
     new SuccessResponse("Éxito", reservas).send(res)
 }
 

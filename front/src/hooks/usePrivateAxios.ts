@@ -40,6 +40,8 @@ const useAxios = () => {
           navigate("/");
           return Promise.reject(refreshError);
         }
+      } else {
+        throw error;
       }
     }
   );

@@ -1,5 +1,6 @@
 import ReservaModel, { IReserva, IDataReserva } from '../models/reservas';
-import { NoEntryError } from '../core/ApiError';
+import { NoEntryError, ForbiddenError } from '../core/ApiError';
+import { Op } from 'sequelize';
 
 /**
  * Obtiene reservas de un espacio por su ID.
@@ -18,7 +19,7 @@ export const obtenerReservasAprovadasByEspacio = async (nEspacio: number): Promi
  * Obtiene reservas de un espacio por su ID.
  * @returns {IReserva | null} – Reserva.
  */
-export const obtenerReservas = async (): Promise<{ dFechaInicio: string, dFechaFin: string }[] | null> => {
+export const obtenerReservas = async (): Promise<IReserva[] | null> => {
     const reservas = await ReservaModel.findAll({
         where: { bActivo: true },
         include: ['espacio', 'estatus', 'usuario'],
@@ -33,7 +34,7 @@ export const obtenerReservas = async (): Promise<{ dFechaInicio: string, dFechaF
  * @param {number} nFolio – ID de la reserva a buscar.
  * @returns {IReserva | null} – Reserva.
  */
-export const obtenerReservaByFolio = async (nFolio: number): Promise<IReserva | null> => {
+export const obtenerReservaByFolio = async (nFolio: number): Promise<IReserva> => {
     const reserva = await ReservaModel.findOne({
         where: { nFolio, bActivo: true },
         include: ['estatus'],
@@ -106,17 +107,23 @@ export const aprovarReserva = async (nFolio: number): Promise<IDataReserva> => {
     const reserva = await ReservaModel.findByPk(nFolio, { include: ['espacio', 'estatus', 'usuario'] });
     if (!reserva) throw new NoEntryError('Reserva no encontrada');
 
-    //Verificar si el periodo ya fue reservado
-    const reservas = await ReservaModel.findAll({
+    const ocupado = await ReservaModel.findAll({
         where: {
             nEspacio: reserva.nEspacio,
-            dFechaInicio: { $between: [reserva.dFechaInicio, reserva.dFechaFin] },
-            dFechaFin: { $between: [reserva.dFechaInicio, reserva.dFechaFin] },
+            [Op.or]: [
+                {
+                    dFechaInicio: { [Op.lt]: new Date(reserva.dFechaFin) },
+                    dFechaFin: { [Op.gt]: new Date(reserva.dFechaInicio) },
+                }
+            ],
             nEstatus: 2,
             bActivo: true,
         },
     });
-    if (reservas.length > 0) throw new NoEntryError('El espacio ya fue reservado en ese periodo');
+
+    console.log('ocupado', ocupado);
+
+    if (ocupado.length > 0) throw new ForbiddenError('El espacio ya fue reservado en ese periodo');
 
     await reserva.update({ nEstatus: 2 });
     return reserva;
