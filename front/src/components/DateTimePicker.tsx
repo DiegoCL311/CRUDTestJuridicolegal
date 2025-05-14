@@ -3,8 +3,10 @@ import { DatePicker, Space } from 'antd';
 import type { GetProps } from 'antd';
 import dayjs, { Dayjs } from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
+import isBetween from 'dayjs/plugin/isBetween';
 
 dayjs.extend(customParseFormat);
+dayjs.extend(isBetween);
 
 type RangePickerProps = GetProps<typeof DatePicker.RangePicker>;
 type DisabledRange = { start: Dayjs; end: Dayjs };
@@ -17,6 +19,7 @@ interface DateTimePickerProps {
 }
 
 export const DateTimePicker: React.FC<DateTimePickerProps> = ({ disabledRanges = [], value, onCalendarChange, disabled }) => {
+    // Rango seleccionado controlado desde props
     const selectedDates = value;
 
     // Calcula rangos dinámicos incluyendo bloqueo hacia atrás y hacia adelante
@@ -39,15 +42,9 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({ disabledRanges =
         return disabledRanges;
     }, [selectedDates, disabledRanges]);
 
-    const disabledDate = (current: Dayjs) => {
-        if (!current) return false;
-        return dynamicRanges.some(r => {
-            return current.isSame(r.start, 'day') || current.isAfter(r.start, 'day') && current.isBefore(r.end, 'day') || current.isSame(r.end, 'day');
-        });
-    };
-
+    // Deshabilita horas y minutos según rangos y tipo (inicio/fin)
     const disabledTimePicker: RangePickerProps['disabledTime'] = (current, type) => {
-        if (!current) return { disabledHours: () => [], disabledMinutes: () => [], disabledSeconds: () => [] };
+        if (!current) return { disabledHours: () => [], disabledSeconds: () => [] };
         const ranges = dynamicRanges;
         const horasDes: Set<number> = new Set();
         ranges.forEach(r => {
@@ -64,17 +61,17 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({ disabledRanges =
             if (type === 'start' && current.isSame(r.start, 'day')) horasDes.add(r.start.hour());
         });
         const horasArray = Array.from(horasDes).sort((a, b) => a - b);
-        const disabledMinutes = (hour: number) => {
-            const mins: Set<number> = new Set();
-            ranges.forEach(r => {
-                const mismaInicio = current.isSame(r.start, 'day');
-                const mismaFin = current.isSame(r.end, 'day');
-                if (mismaInicio && hour === r.start.hour()) { for (let m = r.start.minute() + 1; m < 60; m++) mins.add(m); }
-                if (mismaFin && hour === r.end.hour()) { for (let m = 0; m < r.end.minute(); m++) mins.add(m); }
-            });
-            return Array.from(mins).sort((a, b) => a - b);
-        };
-        return { disabledHours: () => horasArray, disabledMinutes, disabledSeconds: () => [] };
+
+        return { disabledHours: () => horasArray, disabledSeconds: () => [] };
+    };
+
+    // Deshabilita días si no queda ninguna hora disponible
+    const disabledDate = (current: Dayjs) => {
+        if (!current) return false;
+        const { disabledHours } = disabledTimePicker(current, 'start', { from: current });
+        //@ts-ignore
+        const horasDes = disabledHours();
+        return horasDes.length === 24;
     };
 
     return (

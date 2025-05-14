@@ -213,7 +213,6 @@ function BasicLayout() {
       </header>
       <Outlet />
       <Toaster />
-
     </div>
   )
 }

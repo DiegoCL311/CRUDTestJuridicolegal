@@ -65,17 +65,20 @@ export function Login({
 
   const onSubmit: SubmitHandler<LoginData> = async (data) => {
     setLoading(true);
-    const response = (await apiInstance.post('/auth/login', data));
-    const responseData = response.data.data;
+    try {
 
-    if (response.status !== 200)
-      return;
+      const response = (await apiInstance.post('/auth/login', data));
+      const responseData = response.data.data;
 
-    setAuth({
-      usuario: responseData.usuario,
-      rol: responseData.rol,
-      accessToken: responseData.accessToken,
-    });
+      setAuth({
+        usuario: responseData.usuario,
+        rol: responseData.rol,
+        accessToken: responseData.accessToken,
+      });
+    } catch (error) {
+      toast.error("Error al iniciar sesión, verifica tus credenciales");
+
+    }
 
     setLoading(false);
   }

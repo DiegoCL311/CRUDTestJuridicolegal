@@ -172,8 +172,11 @@ export function SolicitudReserva(): React.JSX.Element {
                     <p><strong>Descripción: </strong>{form.getValues('cDescripcion')}</p>
                     <p><strong>Recuerda que la solicitud está sujeta a aprobación por parte del administrador.</strong></p>
                 </div>,
-            onOk() {
-                return api.post('/reservas/registrar', data).then((res) => {
+            async onOk() {
+
+                try {
+                    const res = await api.post('/reservas/registrar', data);
+
                     toast.success('Solicitud enviada correctamente', {
                         description: `La solicitud de reserva ha sido enviada. Tu numero de folio es: ${res.data.data.nFolio}`,
                         duration: 5000,
@@ -182,11 +185,9 @@ export function SolicitudReserva(): React.JSX.Element {
                         icon: <DynamicIcon name="check" size={16} className="text-green-500" />,
                     })
 
-                    navigate('/reservas', { replace: true });
+                    navigate('/reservas/consultar');
 
-
-                }).catch((error) => {
-
+                } catch (error) {
                     console.error('Error al enviar la solicitud:', error);
                     toast.error('Error al enviar la solicitud', {
                         description: 'Hubo un error al enviar la solicitud de reserva. Por favor, inténtalo de nuevo más tarde.',
@@ -195,7 +196,7 @@ export function SolicitudReserva(): React.JSX.Element {
                         descriptionClassName: 'font-bold color-primary',
                         icon: <DynamicIcon name="x" size={16} className="text-red-500" />,
                     })
-                })
+                }
             },
             onCancel() {
                 setDisabledbutton(false);
