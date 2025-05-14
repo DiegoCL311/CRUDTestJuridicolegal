@@ -36,7 +36,7 @@ const registrarReserva = async (req: Request, res: Response) => {
     const nUsuario = req.usuario?.nUsuario;
     if (!nUsuario) throw new AuthFailureError("No tienes permiso");
 
-    console.log("registrarReserva", req.body);
+    //console.log("registrarReserva", req.body);
 
     const reserva = await reservasService.crearReserva({ ...req.body, nUsuario: nUsuario });
 

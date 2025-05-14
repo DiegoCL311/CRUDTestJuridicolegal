@@ -102,7 +102,7 @@ export default function App() {
 
   if (isLoading) return (<LoadingSpinner />)
 
-  console.log("Auth", auth);
+  //console.log("Auth", auth);
 
 
   switch (auth.rol?.cRol) {

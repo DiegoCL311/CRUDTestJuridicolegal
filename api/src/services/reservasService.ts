@@ -98,7 +98,7 @@ export const crearReserva = async (reserva: IDataReserva): Promise<IReserva> => 
         },
     });
 
-    console.log('---------ocupado--------', ocupado);
+    //console.log('---------ocupado--------', ocupado);
 
     if (ocupado.length > 0) throw new ForbiddenError('El espacio ya fue reservado en ese periodo');
 

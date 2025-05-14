@@ -150,7 +150,7 @@ export function SolicitudReserva(): React.JSX.Element {
 
     // Enviar nueva reserva
     async function onSubmitNuevo(data: FormData) {
-        console.log('Envío correcto:', data);
+        //console.log('Envío correcto:', data);
 
 
         setDisabledbutton(true);
@@ -206,7 +206,7 @@ export function SolicitudReserva(): React.JSX.Element {
 
     // Actualizar reserva
     async function onSubmitActualizar(data: FormData) {
-        console.log('Envío correcto:', data);
+        //console.log('Envío correcto:', data);
         setDisabledbutton(true);
         confirm({
             title: '¿Estas seguro que deseas actualizar?',
