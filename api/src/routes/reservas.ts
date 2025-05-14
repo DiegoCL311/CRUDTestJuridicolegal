@@ -24,4 +24,5 @@ app.put('/aprovar/:nFolio', asyncErrorHandler(reservasController.aprovarReserva)
 
 app.put('/rechazar/:nFolio', asyncErrorHandler(reservasController.rechazarReserva));
 
+
 export default app;

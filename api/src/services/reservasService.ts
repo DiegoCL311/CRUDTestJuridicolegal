@@ -2,17 +2,50 @@ import ReservaModel, { IReserva, IDataReserva } from '../models/reservas';
 import { NoEntryError, ForbiddenError } from '../core/ApiError';
 import { Op } from 'sequelize';
 
+interface IFecha { dFechaInicio: string; dFechaFin: string; }
+
+
 /**
  * Obtiene reservas de un espacio por su ID.
  * @param {number} nEspacio – ID del espacio a buscar.
  * @returns {IReserva | null} – Reserva.
  */
-export const obtenerReservasAprovadasByEspacio = async (nEspacio: number): Promise<{ dFechaInicio: string, dFechaFin: string }[] | null> => {
+export const obtenerReservasAprovadasByEspacio = async (nEspacio: number): Promise<IFecha[] | null> => {
     const reservas = await ReservaModel.findAll({
         where: { nEspacio, nEstatus: 2, bActivo: true },
     });
 
     return reservas.map((reserva) => { return { dFechaInicio: reserva.dFechaInicio, dFechaFin: reserva.dFechaFin } });
+};
+
+/**
+ * Obtiene reservas aprobadas para el día de hoy de un espacio por su ID,
+ * @param nEspacio – ID del espacio a buscar.
+ * @returns Lista de objetos con { dFechaInicio, dFechaFin } o null si no hay.
+ */
+export const obtenerReservasAprovadasByEspacioHoy = async (nEspacio: number): Promise<IFecha[] | null> => {
+    // Límite inferior: hoy a las 00:00
+    const inicioHoy = new Date();
+    inicioHoy.setHours(0, 0, 0, 0);
+    // Límite superior: hoy a las 23:59:59.999
+    const finHoy = new Date();
+    finHoy.setHours(23, 59, 59, 999);
+
+    const reservas = await ReservaModel.findAll({
+        where: {
+            nEspacio,
+            nEstatus: 2,      // sólo aprobadas
+            bActivo: true,
+            // Intersección de rangos con 'hoy'
+            dFechaInicio: { [Op.lte]: finHoy },
+            dFechaFin: { [Op.gte]: inicioHoy },
+        },
+    });
+
+    return reservas.map(r => ({
+        dFechaInicio: r.dFechaInicio,
+        dFechaFin: r.dFechaFin
+    }));
 };
 
 /**
