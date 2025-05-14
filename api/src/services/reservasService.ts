@@ -51,6 +51,24 @@ export const obtenerReservaByFolio = async (nFolio: number): Promise<IReserva> =
  * @returns {IReserva} Objeto Reserva creado.
  */
 export const crearReserva = async (reserva: IDataReserva): Promise<IReserva> => {
+    const ocupado = await ReservaModel.findAll({
+        where: {
+            nEspacio: reserva.nEspacio,
+            [Op.or]: [
+                {
+                    dFechaInicio: { [Op.lt]: new Date(reserva.dFechaFin) },
+                    dFechaFin: { [Op.gt]: new Date(reserva.dFechaInicio) },
+                }
+            ],
+            nEstatus: 2,
+            bActivo: true,
+        },
+    });
+
+    console.log('---------ocupado--------', ocupado);
+
+    if (ocupado.length > 0) throw new ForbiddenError('El espacio ya fue reservado en ese periodo');
+
     const ReservaInserted = await ReservaModel.create(reserva);
     return ReservaInserted.toObj();
 };
@@ -120,8 +138,6 @@ export const aprovarReserva = async (nFolio: number): Promise<IDataReserva> => {
             bActivo: true,
         },
     });
-
-    console.log('ocupado', ocupado);
 
     if (ocupado.length > 0) throw new ForbiddenError('El espacio ya fue reservado en ese periodo');
 

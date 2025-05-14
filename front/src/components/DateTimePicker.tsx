@@ -17,7 +17,6 @@ interface DateTimePickerProps {
 }
 
 export const DateTimePicker: React.FC<DateTimePickerProps> = ({ disabledRanges = [], value, onCalendarChange, disabled }) => {
-    // Rango seleccionado controlado desde props
     const selectedDates = value;
 
     // Calcula rangos dinámicos incluyendo bloqueo hacia atrás y hacia adelante
@@ -40,10 +39,13 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({ disabledRanges =
         return disabledRanges;
     }, [selectedDates, disabledRanges]);
 
-    // Deshabilita días según cualquier rango dinámico
-    const disabledDate = (current: Dayjs) => !!current && dynamicRanges.some(r => current.isAfter(r.start, 'day') && current.isBefore(r.end, 'day'));
+    const disabledDate = (current: Dayjs) => {
+        if (!current) return false;
+        return dynamicRanges.some(r => {
+            return current.isSame(r.start, 'day') || current.isAfter(r.start, 'day') && current.isBefore(r.end, 'day') || current.isSame(r.end, 'day');
+        });
+    };
 
-    // Deshabilita horas y minutos según rangos y tipo (inicio/fin)
     const disabledTimePicker: RangePickerProps['disabledTime'] = (current, type) => {
         if (!current) return { disabledHours: () => [], disabledMinutes: () => [], disabledSeconds: () => [] };
         const ranges = dynamicRanges;
