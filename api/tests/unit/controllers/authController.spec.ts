@@ -3,140 +3,82 @@ import app from '../../../src/app';
 import loaders from '../../../src/loaders';
 import { faker } from '@faker-js/faker';
 import dotenv from 'dotenv';
+import { describe, it, expect, beforeAll, afterAll } from '@jest/globals';
 dotenv.config({ path: '.env.test' });
 
 describe('Auth Controller', () => {
-    let user: any;
+    let cUsuario: string;
+    let cPassword: string;
+    let cNombres: string;
+    let cApellidos: string;
+    const nRol = 1;
 
-    beforeAll(async () => {
-        await loaders.init({ expressApp: app });
-    });
+    beforeAll(async () => { await loaders.init({ expressApp: app }); });
+    afterAll(() => { /* cerrar conexión si es necesario */ });
 
-    it('should return an error when logging in with an empty body', async () => {
+    it('debe devolver 400 al iniciar sesión con cuerpo vacío', async () => {
         const response = await request(app)
             .post('/api/auth/login')
             .send({});
-
-
         expect(response.status).toBe(400);
-        expect(response.body).toHaveProperty('message', "email is required, contrasena is required");
-
+        expect(response.body).toHaveProperty('message', 'cUsuario: Required, cPassword: Required');
     });
 
-    it('should successfully register with valid email and password', async () => {
-        const email = faker.internet.email();
-        const contrasena = faker.internet.password();
-
-
-        user = {
-            nombre: 'testuser',
-            email: email,
-            contrasena: contrasena,
-        };
+    it('debe registrar exitosamente con datos válidos', async () => {
+        cUsuario = faker.internet.userName();
+        cPassword = faker.internet.password(8);
+        cNombres = faker.name.firstName();
+        cApellidos = faker.name.lastName();
 
         const response = await request(app)
             .post('/api/auth/register')
-            .send(user);
-
+            .send({ cNombres, cApellidos, cUsuario, cPassword, nRol });
 
         expect(response.status).toBe(200);
         expect(response.body).toHaveProperty('message', 'Registro exitoso');
+        expect(response.body).toHaveProperty('data');
+        expect(response.body.data).toHaveProperty('cUsuario', cUsuario);
+        expect(response.body.data).toHaveProperty('cNombres', cNombres);
+        expect(response.body.data).toHaveProperty('cApellidos', cApellidos);
+        expect(response.body.data).toHaveProperty('nRol', nRol);
     });
 
-    it('should return a valid token when logging in with valid credentials', async () => {
-
+    it('debe devolver token válido al iniciar sesión con credenciales correctas', async () => {
         const response = await request(app)
             .post('/api/auth/login')
-            .send({ email: user.email, contrasena: user.contrasena });
-
+            .send({ cUsuario, cPassword });
 
         expect(response.status).toBe(200);
         expect(response.body).toHaveProperty('message', 'Inicio de sesion exitoso');
         expect(response.body).toHaveProperty('data');
         expect(response.body.data).toHaveProperty('accessToken');
+        expect(response.body.data.usuario).toHaveProperty('cUsuario', cUsuario);
     });
 
-
-    it('should return an error when logging in with invalid credentials', async () => {
+    it('debe devolver 401 al iniciar sesión con credenciales inválidas', async () => {
         const response = await request(app)
             .post('/api/auth/login')
-            .send({
-                email: 'testing2@testing1.com',
-                contrasena: '22222222222275f6tuyibinj',
-            });
+            .send({ cUsuario: 'noExiste', cPassword: '123456' });
 
-
-        expect(response.status).toBe(400);
-        expect(response).toHaveProperty('error');
+        expect(response.status).toBe(401);
         expect(response.body).toHaveProperty('message', 'Credenciales inválidas');
     });
 
-    it('should return an error when registering with an invalid email, contrasena, nombre', async () => {
+    it('debe devolver 400 al registrar con nombre muy corto', async () => {
         const response = await request(app)
             .post('/api/auth/register')
-            .send({
-                nombre: '',
-                email: '',
-                contrasena: '',
-            });
+            .send({ cNombres: 'Al', cApellidos: 'Lo', cUsuario: 'user123', cPassword: 'pw1234', nRol });
 
         expect(response.status).toBe(400);
-        expect(response).toHaveProperty('error');
-        expect(response.body).toHaveProperty('message', 'email is not allowed to be empty, contrasena is not allowed to be empty, nombre is not allowed to be empty');
-
+        expect(response.body).toHaveProperty('message');
     });
 
-    it('should return an error when registering with an invalid email', async () => {
+    it('debe devolver 400 al registrar con contraseña muy corta', async () => {
         const response = await request(app)
             .post('/api/auth/register')
-            .send({
-                nombre: 'testuser',
-                email: 'con.bo7b87@.mx',
-                contrasena: 'testpassword',
-            });
+            .send({ cNombres: 'Usuario', cApellidos: 'Prueba', cUsuario: 'user123', cPassword: '123', nRol });
 
         expect(response.status).toBe(400);
-        expect(response).toHaveProperty('error');
-        expect(response.body).toHaveProperty('message', 'email must be a valid email');
-    });
-
-    it('should return an error when registering with an invalid contrasena', async () => {
-        const response = await request(app)
-            .post('/api/auth/register')
-            .send({
-                nombre: 'testuser',
-                email: 'testing@testing.com',
-                contrasena: '',
-            });
-
-        expect(response.status).toBe(400);
-        expect(response).toHaveProperty('error');
-        expect(response.body).toHaveProperty('message', 'contrasena is not allowed to be empty');
-    });
-
-    it('should return an error when registering with a valid email and invalid contrasena', async () => {
-        const response = await request(app)
-            .post('/api/auth/register')
-            .send({
-                email: 'testing@testing.com',
-                contrasena: '0',
-            });
-
-        expect(response.status).toBe(400);
-        expect(response).toHaveProperty('error');
-    });
-
-    it('should return an error when registering with a valid email and contrasena that is too short', async () => {
-        const response = await request(app)
-            .post('/api/auth/register')
-            .send({
-                nombre: 'testuser',
-                email: 'testuser@testing.com',
-                contrasena: 'shrt',
-            });
-
-        expect(response.status).toBe(400);
-        expect(response).toHaveProperty('error');
-        expect(response.body).toHaveProperty('message', 'contrasena length must be at least 6 characters long');
+        expect(response.body).toHaveProperty('message');
     });
 });
